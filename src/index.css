@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== RESET & BASE ===== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg, #f0f0f0);
+  color: var(--text, #000);
+  margin: 0;
+  padding: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== GOTHIC TYPOGRAPHY ===== */
+.font-gothic {
+  font-family: 'Cinzel', serif;
+}
+
+.section-title {
+  font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
+
+/* ===== INPUT RESET — убираем дефолтные белые инпуты ===== */
+input, select, textarea {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  outline: none;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+}
+
+/* Убираем стрелочки у number-инпутов */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Убираем дефолтный background у select */
+select {
+  appearance: auto;
+  cursor: pointer;
+}
+
+/* ===== SELECT OPTIONS — читабельный цвет в любых темах ===== */
+select option {
+  color: var(--text);
+  background-color: var(--bg);
+}
+
+/* ===== SAFE AREA INSETS (mobile) ===== */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  header, nav, [class*="no-print"] {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+    padding: 0;
+  }
+  main {
+    padding: 0;
+  }
+}
+
+/* ===== SCROLLBAR (webkit) ===== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--panel, #f0f0f0);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border, #ccc);
+  border-radius: 4px;
+}
+
+/* ===== FOCUS VISIBLE ===== */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent, #000);
+  outline-offset: 1px;
+}
