@@ -1,4 +1,4 @@
-const CACHE = 'vtm6e-v2';
+const CACHE = 'vtm6e-v3';
 const ASSETS = ['/', '/index.html'];
 
 self.addEventListener('install', (e) => {
