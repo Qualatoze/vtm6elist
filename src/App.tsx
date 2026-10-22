@@ -7,15 +7,26 @@ import { SKILLS_LIST } from './types';
 import { exportJSON, importJSONFile, exportAllPDFs } from './utils/exportImport';
 import { THEMES, DEFAULT_THEME_ID } from './themes';
 import { rollDicePool } from './utils/diceRoller';
-import { Download, Upload, FileJson, RotateCcw, Menu, X, Dices } from 'lucide-react';
+import { Download, Upload, FileJson, RotateCcw, Menu, X, Dices, Send } from 'lucide-react';
 
 function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [themeId, setThemeId] = useState<string>(() => localStorage.getItem('vtm6e-theme') || DEFAULT_THEME_ID);
   const [diceResults, setDiceResults] = useState<number[] | null>(null);
+  
+  // Состояния для анимации загрузки (убрали 'hidden')
+  const [splashState, setSplashState] = useState<'center' | 'corner'>('center');
+
   const { getActive, loadCharacter, loadCharacters, resetActiveCharacter } = useCharacterStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const character = getActive();
+
+  // Эффект анимации загрузки
+  useEffect(() => {
+    // Через 1.5 секунды начинает лететь в угол (и остается там)
+    const timer = setTimeout(() => setSplashState('corner'), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Apply theme CSS variables
   useEffect(() => {
@@ -81,6 +92,42 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+      
+      {/* SPLASH SCREEN / ANIMATED LOGO */}
+      <div
+        className="fixed z-[100] pointer-events-none"
+        style={{
+          transition: 'all 1s cubic-bezier(0.25, 1, 0.5, 1)',
+          ...(splashState === 'center' ? {
+            top: '50%', left: '50%', transform: 'translate(-50%, -50%) scale(1)',
+            opacity: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px'
+          } : {
+            // Выравниваем по центру хедера (высота хедера ~36px + отступы)
+            top: '16px', right: '16px', transform: 'translate(0, 0) scale(1)',
+            opacity: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '6px'
+          })
+        }}
+      >
+        <div style={{
+          fontSize: splashState === 'center' ? '32px' : '16px',
+          fontWeight: 'bold',
+          letterSpacing: '0.1em',
+          color: 'var(--accent)',
+          lineHeight: 1
+        }}>
+          {splashState === 'center' ? 'Loading...' : 'Oxathiole'}
+        </div>
+        <div style={{
+          fontSize: splashState === 'center' ? '18px' : '12px',
+          color: 'var(--muted)',
+          lineHeight: 1,
+          marginTop: splashState === 'corner' ? '2px' : '0'
+        }}>
+          {/* Убираем дублирование в углу */}
+          {splashState === 'center' ? 'Oxathiole powered' : 'powered'}
+        </div>
+      </div>
+
       {/* HEADER — centered, single row */}
       <header className="sticky top-0 z-50 no-print" style={{ background: 'var(--panel)', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '6px 12px', flexWrap: 'wrap' }}>
@@ -92,11 +139,25 @@ function App() {
           <CharacterSelector />
 
           {/* Tools */}
-          <div style={{ display: 'flex', gap: '3px' }}>
+          <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
             <button onClick={() => exportJSON(character)} title="Экспорт JSON" style={{ background: 'var(--border)', color: 'var(--text)', border: 'none', padding: '4px 5px', borderRadius: '3px', cursor: 'pointer' }}><FileJson size={12} /></button>
             <button onClick={() => fileInputRef.current?.click()} title="Импорт JSON" style={{ background: 'var(--border)', color: 'var(--text)', border: 'none', padding: '4px 5px', borderRadius: '3px', cursor: 'pointer' }}><Upload size={12} /></button>
             <button onClick={() => exportAllPDFs(character.meta.name)} title="Экспорт PDF" style={{ background: 'var(--accent)', color: 'var(--bg)', border: 'none', padding: '4px 5px', borderRadius: '3px', cursor: 'pointer' }}><Download size={12} /></button>
             <button onClick={() => { if (confirm('Очистить лист?')) resetActiveCharacter(); }} title="Сброс" style={{ background: 'var(--border)', color: 'var(--muted)', border: 'none', padding: '4px 5px', borderRadius: '3px', cursor: 'pointer' }}><RotateCcw size={12} /></button>
+            
+            {/* Telegram Link */}
+            <a
+              href="https://t.me/Oxathioleph"
+              target="_blank"
+              rel="noreferrer"
+              title="Telegram Oxathiole"
+              style={{ background: 'var(--border)', color: 'var(--text)', display: 'flex', alignItems: 'center', padding: '4px 5px', borderRadius: '3px', textDecoration: 'none' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24Z" fill="#229ED9"/>
+                <path d="M5.4927 11.8621L18.0652 6.93005C18.6487 6.71824 19.1587 7.07501 18.9697 7.95712L18.9706 7.95593L16.83 18.1383C16.6714 18.8638 16.2422 19.0418 15.6433 18.7015L12.4405 16.3147L10.8934 17.8086C10.7224 17.9796 10.5794 18.1227 10.2491 18.1227L10.4789 14.8651L16.3583 9.52782C16.6158 9.29959 16.3028 9.16997 15.9626 9.39662L8.70475 13.9674L5.54873 12.9896C4.86258 12.7804 4.84673 12.3084 5.4927 11.8621Z" fill="white"/>
+              </svg>
+            </a>
           </div>
 
           {/* Theme selector */}
@@ -119,6 +180,7 @@ function App() {
               <button onClick={() => { fileInputRef.current?.click(); setMobileMenuOpen(false); }} className="flex items-center gap-2 p-2 rounded" style={{ background: 'var(--border)', color: 'var(--text)' }}><Upload size={14} /> Импорт JSON</button>
               <button onClick={() => { exportAllPDFs(character.meta.name); setMobileMenuOpen(false); }} className="flex items-center gap-2 p-2 rounded" style={{ background: 'var(--accent)', color: 'var(--bg)' }}><Download size={14} /> Экспорт PDF</button>
               <button onClick={() => { if (confirm('Очистить?')) resetActiveCharacter(); setMobileMenuOpen(false); }} className="flex items-center gap-2 p-2 rounded" style={{ background: 'var(--border)', color: 'var(--muted)' }}><RotateCcw size={14} /> Очистить</button>
+              <a href="https://t.me/Oxathioleph" target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 rounded" style={{ background: 'var(--border)', color: 'var(--text)' }}><Send size={14} /> Telegram</a>
             </div>
           </div>
         )}

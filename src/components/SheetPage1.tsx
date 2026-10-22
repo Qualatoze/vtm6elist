@@ -59,25 +59,25 @@ const inputStyle: React.CSSProperties = {
 const sectionHeaderStyle: React.CSSProperties = {
   background: 'var(--headerBg)',
   color: 'var(--text)',
-  padding: '4px 8px',
+  padding: '2px 4px',
   fontSize: '12px',
   fontWeight: 'bold',
   letterSpacing: '0.1em',
   textAlign: 'center',
-  marginBottom: '8px',
+  marginBottom: '4px',
   fontFamily: "'Georgia', serif"
 };
 
-const HeaderRow = ({ 
-  label, value, onChange, isDropdown, options 
-}: { 
-  label: string; value: string; onChange: (v: string) => void; isDropdown?: boolean; options?: string[] 
+const HeaderRow = ({
+  label, value, onChange, isDropdown, options, labelWidth = '110px'
+}: {
+  label: string; value: string; onChange: (v: string) => void; isDropdown?: boolean; options?: string[]; labelWidth?: string;
 }) => (
-  <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: '4px', alignItems: 'center', marginBottom: '4px' }}>
-    <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: "'Georgia', serif" }}>{label}:</span>
+  <div style={{ display: 'grid', gridTemplateColumns: `${labelWidth} 1fr`, gap: '4px', alignItems: 'center', marginBottom: '4px', minWidth: 0 }}>
+    <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: "'Georgia', serif", whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={label}>{label}:</span>
     {isDropdown && options ? (
       <select value={value} onChange={(e) => onChange(e.target.value)} style={inputStyle}>
-        <option value="">Выберите...</option>
+        <option value="">...</option>
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
     ) : (
@@ -140,7 +140,7 @@ export const SheetPage1 = () => {
   return (
     <div id="character-sheet" style={{ ...sheetStyle, width: sheetWidth }}>
       {/* ===== 1. ШАПКА ===== */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 60px 1.2fr', gap: '10px', marginBottom: '15px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 60px 1.2fr', gap: '6px', marginBottom: '10px' }}>
         {/* Левая колонка */}
         <div>
           <HeaderRow label="Имя" value={character.meta.name} onChange={(v) => updateMeta('name', v)} />
@@ -179,21 +179,20 @@ export const SheetPage1 = () => {
           </div>
           
           <HeaderRow label="Проклятие клана" value={character.meta.clanBane} onChange={(v) => updateMeta('clanBane', v)} />
+          {/* Поколение и Модификатор */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <HeaderRow label="Поколение" value={character.meta.generation} onChange={(v) => updateMeta('generation', v)} isDropdown options={GENERATION_OPTIONS} />
-            <HeaderRow label="Модификатор" value={character.meta.modifier} onChange={(v) => updateMeta('modifier', v)} />
+            <HeaderRow label="Поколение" value={character.meta.generation} onChange={(v) => updateMeta('generation', v)} isDropdown options={GENERATION_OPTIONS} labelWidth="75px" />
+            <HeaderRow label="Модификатор" value={character.meta.modifier} onChange={(v) => updateMeta('modifier', v)} labelWidth="85px" />
           </div>
+
           <HeaderRow label="Архетип" value={character.meta.archetype} onChange={(v) => updateMeta('archetype', v)} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <HeaderRow label="Сир" value={character.meta.sire} onChange={(v) => updateMeta('sire', v)} />
-            <HeaderRow
-              label="Вид сира"
-              value={character.meta.sireType}
-              onChange={(v) => updateMeta('sireType', v)}
-              isDropdown
-              options={SIRE_TYPES_LIST}
-            />
+
+          {/* Сир и Вид */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px' }}>
+            <HeaderRow label="Сир" value={character.meta.sire} onChange={(v) => updateMeta('sire', v)} labelWidth="40px" />
+            <HeaderRow label="Вид" value={character.meta.sireType} onChange={(v) => updateMeta('sireType', v)} isDropdown options={SIRE_TYPES_LIST} labelWidth="40px" />
           </div>
+
           <HeaderRow label="Дисциплина от сира" value={character.meta.sireDiscipline} onChange={(v) => updateMeta('sireDiscipline', v)} />
         </div>
       </div>
@@ -209,7 +208,7 @@ export const SheetPage1 = () => {
           {ATTR_GROUPS.map((group, gi) => (
             <div key={group.key} style={{ borderRight: !isMobile && gi < 2 ? `1px solid var(--border)` : 'none', borderBottom: isMobile ? `1px solid var(--border)` : 'none', padding: '5px', minWidth: 0, overflow: 'hidden' }}>
               {group.attrs.map(attr => (
-                <div key={attr} style={{ marginBottom: '8px' }}>
+                <div key={attr} style={{ marginBottom: '4px' }}>
                   <div style={{ textAlign: 'center', fontSize: '11px', marginBottom: '4px', fontWeight: 'bold', fontFamily: "'Georgia', serif" }}>{ATTR_LABELS[attr]}</div>
                   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px' }}>
                     <div style={{ display: 'flex', gap: '2px' }}>
@@ -218,7 +217,7 @@ export const SheetPage1 = () => {
                         const val = character.attributes[group.key][attr as keyof typeof character.attributes[typeof group.key]];
                         const isFilled = pos <= val;
                         return (
-                          <button key={`a-${i}`} onClick={() => updateAttribute(group.key, attr, pos)} style={{ width: '18px', height: '18px', background: isFilled ? 'var(--dot-color)' : 'transparent', border: `1px solid ${isFilled ? 'var(--dot-color)' : 'var(--border)'}`, borderRadius: '50%', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
+                          <button key={`a-${i}`} onClick={() => updateAttribute(group.key, attr, pos)} style={{ width: '16px', height: '16px', background: isFilled ? 'var(--dot-color)' : 'transparent', border: `1px solid ${isFilled ? 'var(--dot-color)' : 'var(--border)'}`, borderRadius: '50%', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
                         );
                       })}
                     </div>
@@ -229,7 +228,7 @@ export const SheetPage1 = () => {
                         const isFilled = pos <= val;
                         const isThreshold = pos >= 6;
                         return (
-                          <button key={`b-${i}`} onClick={() => updateAttribute(group.key, attr, pos)} style={{ width: '18px', height: '18px', background: isFilled ? (isThreshold ? 'var(--accent)' : 'var(--dot-color)') : 'transparent', border: `1px solid ${isFilled ? (isThreshold ? 'var(--accent)' : 'var(--dot-color)') : 'var(--border)'}`, borderRadius: '50%', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
+                          <button key={`b-${i}`} onClick={() => updateAttribute(group.key, attr, pos)} style={{ width: '16px', height: '16px', background: isFilled ? (isThreshold ? 'var(--accent)' : 'var(--dot-color)') : 'transparent', border: `1px solid ${isFilled ? (isThreshold ? 'var(--accent)' : 'var(--dot-color)') : 'var(--border)'}`, borderRadius: '50%', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
                         );
                       })}
                     </div>

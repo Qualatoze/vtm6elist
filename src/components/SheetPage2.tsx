@@ -46,10 +46,10 @@ export const SheetPage2 = () => {
 
   // Адаптивный размер: чем больше дисциплин — тем компактнее карточки
   const n = character.disciplines.length;
-  const cardHeight  = n <= 6 ? 175 : n <= 8 ? 140 : n <= 10 ? 115 : 95;
-  const nameSize    = n <= 6 ? 14  : n <= 8 ? 13  : n <= 10 ? 11  : 10;
-  const lineSize    = n <= 6 ? 13  : n <= 8 ? 12  : n <= 10 ? 10  : 9;
-  const lineHeight  = n <= 6 ? 26  : n <= 8 ? 21  : n <= 10 ? 17  : 14;
+  const cardHeight  = n <= 6 ? 140 : n <= 8 ? 115 : 95; // Ужали высоту
+  const nameSize    = n <= 6 ? 13  : n <= 8 ? 12 : 10;
+  const lineSize    = n <= 6 ? 12  : n <= 8 ? 11 : 9;
+  const lineHeight  = n <= 6 ? 18  : n <= 8 ? 16 : 14;
   const dotSize     = n <= 6 ? 22  : n <= 8 ? 20  : 18;
 
   // Рендерим все дисциплины (без ограничения на 16)
