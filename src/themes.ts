@@ -8,6 +8,7 @@ export interface Theme {
   accent: string;
   border: string;
   headerBg: string;
+  headerText: string;
   dotColor: string;
   cardBorder: string;
   glow: string;
@@ -24,7 +25,8 @@ export const THEMES: Theme[] = [
     muted: '#555555',
     accent: '#000000',
     border: '#000000',
-    headerBg: 'rgba(0, 0, 0, 0.9)',
+    headerBg: 'rgba(0, 0, 0, 0.08)',
+    headerText: '#fff',
     dotColor: '#000000',
     cardBorder: '#cccccc',
     glow: 'rgba(0, 0, 0, 0.2)',
@@ -40,6 +42,7 @@ export const THEMES: Theme[] = [
     accent: '#9b6fd4',
     border: '#3a2a5a',
     headerBg: 'rgba(155, 111, 212, 0.15)',
+    headerText: 'var(--text)',
     dotColor: '#9b6fd4',
     cardBorder: '#2a1a4a',
     glow: 'rgba(155, 111, 212, 0.3)',
@@ -55,10 +58,11 @@ export const THEMES: Theme[] = [
     accent: '#8b6914',
     border: '#c4a86a',
     headerBg: 'rgba(139, 105, 20, 0.1)',
+    headerText: 'var(--text)',
     dotColor: '#8b6914',
     cardBorder: '#d4bc7a',
     glow: 'rgba(139, 105, 20, 0.2)',
-    inputBg: '#e6eaff'
+    inputBg: 'rgba(139, 105, 20, 0.06)'
   },
   {
     id: 'neon',
@@ -70,6 +74,7 @@ export const THEMES: Theme[] = [
     accent: '#00e5c3',
     border: '#1a2a3a',
     headerBg: 'rgba(0, 229, 195, 0.1)',
+    headerText: 'var(--text)',
     dotColor: '#00e5c3',
     cardBorder: '#1a2a3a',
     glow: 'rgba(0, 229, 195, 0.4)',
@@ -85,6 +90,7 @@ export const THEMES: Theme[] = [
     accent: '#b31217',
     border: '#4a1a1a',
     headerBg: 'rgba(179, 18, 23, 0.1)',
+    headerText: 'var(--text)',
     dotColor: '#b31217',
     cardBorder: '#2a0f12',
     glow: 'rgba(179, 18, 23, 0.4)',
@@ -100,6 +106,7 @@ export const THEMES: Theme[] = [
     accent: '#7ab8e8',
     border: '#2a3a5a',
     headerBg: 'rgba(122, 184, 232, 0.1)',
+    headerText: 'var(--text)',
     dotColor: '#7ab8e8',
     cardBorder: '#1a2a4a',
     glow: 'rgba(122, 184, 232, 0.3)',
@@ -115,6 +122,7 @@ export const THEMES: Theme[] = [
     accent: '#e87830',
     border: '#4a2a10',
     headerBg: 'rgba(232, 120, 48, 0.1)',
+    headerText: 'var(--text)',
     dotColor: '#e87830',
     cardBorder: '#2a1505',
     glow: 'rgba(232, 120, 48, 0.3)',

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createEmptyCharacter } from '../store';
-import { CLAN_DATA } from '../types';
+import { SKILLS_LIST } from '../types';
 
 describe('createEmptyCharacter', () => {
   it('creates a character with default values', () => {
@@ -18,8 +18,8 @@ describe('createEmptyCharacter', () => {
 
   it('has all skills initialized with 0 dots', () => {
     const char = createEmptyCharacter();
-    expect(char.skills['Бой']).toBeDefined();
-    expect(char.skills['Бой'].dots).toBe(0);
-    expect(char.skills['Знания'].specifications[0]).toBe('');
+    expect(char.skills[SKILLS_LIST[0].id]).toBeDefined();
+    expect(char.skills[SKILLS_LIST[0].id].dots).toBe(0);
+    expect(char.skills[SKILLS_LIST[1].id].specifications[0]).toBe('');
   });
 });

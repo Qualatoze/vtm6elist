@@ -1,23 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useCharacterStore } from '../store';
-import { SKILLS_LIST, NOSTALGIA_DECADES, VAMPIRE_TYPES, CLANS_LIST, SIRE_TYPES_LIST } from '../types';
+import { t } from '../i18n';
+import { SKILLS_LIST, NOSTALGIA_DECADES, VAMPIRE_TYPES, CLANS_LIST, SIRE_TYPES_LIST, DISCIPLINES_LIST } from '../types';
 import { DotRating } from './DotRating';
 import { HumanityTracker } from './HumanityTracker';
 
 const ATTR_GROUPS = [
-  { key: 'physical' as const, title: 'ФИЗИЧЕСКИЕ', attrs: ['strength', 'dexterity', 'stamina'] },
-  { key: 'social' as const, title: 'СОЦИАЛЬНЫЕ', attrs: ['charisma', 'manipulation', 'composure'] },
-  { key: 'mental' as const, title: 'МЕНТАЛЬНЫЕ', attrs: ['intelligence', 'wits', 'resolve'] }
+  { key: 'physical' as const, title: 'attributes_groups.physical', attrs: ['strength', 'dexterity', 'stamina'] },
+  { key: 'social' as const, title: 'attributes_groups.social', attrs: ['charisma', 'manipulation', 'composure'] },
+  { key: 'mental' as const, title: 'attributes_groups.mental', attrs: ['intelligence', 'wits', 'resolve'] }
 ];
 
 const ATTR_LABELS: Record<string, string> = {
-  strength: 'Сила', dexterity: 'Ловкость', stamina: 'Выносливость',
-  charisma: 'Обаяние', manipulation: 'Манипуляция', composure: 'Самообладание',
-  intelligence: 'Интеллект', wits: 'Смекалка', resolve: 'Упорство'
+  strength: 'attributes.strength', dexterity: 'attributes.dexterity', stamina: 'attributes.stamina',
+  charisma: 'attributes.charisma', manipulation: 'attributes.manipulation', composure: 'attributes.composure',
+  intelligence: 'attributes.intelligence', wits: 'attributes.wits', resolve: 'attributes.resolve'
 };
 
-const GENERATION_VALUES = Array.from({ length: 16 }, (_, i) => i + 2); // 2..17
-const GENERATION_OPTIONS = GENERATION_VALUES.map(v => `${v}-е`);
+const GENERATION_VALUES = Array.from({ length: 16 }, (_, i) => i + 2);
+const GENERATION_OPTIONS = GENERATION_VALUES.map(v => String(v));
 
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -54,11 +55,12 @@ const inputStyle: React.CSSProperties = {
   fontFamily: "'Georgia', serif",
   position: 'relative',
   zIndex: 10,
+  boxSizing: 'border-box'
 };
 
 const sectionHeaderStyle: React.CSSProperties = {
   background: 'var(--headerBg)',
-  color: 'var(--text)',
+  color: 'var(--header-text, var(--text))',
   padding: '2px 4px',
   fontSize: '12px',
   fontWeight: 'bold',
@@ -71,57 +73,60 @@ const sectionHeaderStyle: React.CSSProperties = {
 const HeaderRow = ({
   label, value, onChange, isDropdown, options, labelWidth = '110px'
 }: {
-  label: string; value: string; onChange: (v: string) => void; isDropdown?: boolean; options?: string[]; labelWidth?: string;
+  label: string; value: string; onChange: (v: string) => void; isDropdown?: boolean; options?: Array<{ id: string; label: string }>; labelWidth?: string;
 }) => (
-  <div style={{ display: 'grid', gridTemplateColumns: `${labelWidth} 1fr`, gap: '4px', alignItems: 'center', marginBottom: '4px', minWidth: 0 }}>
-    <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: "'Georgia', serif", whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={label}>{label}:</span>
-    {isDropdown && options ? (
-      <select value={value} onChange={(e) => onChange(e.target.value)} style={inputStyle}>
-        <option value="">...</option>
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
-      </select>
-    ) : (
-      <input type="text" value={value} onChange={(e) => onChange(e.target.value)} style={inputStyle} />
-    )}
+  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px', width: '100%', minWidth: 0 }}>
+    <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: "'Georgia', serif", width: labelWidth, flexShrink: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={label}>{label}:</span>
+    <div style={{ flex: 1, minWidth: 0 }}>
+      {isDropdown && options ? (
+        <select value={value} onChange={(e) => onChange(e.target.value)} style={inputStyle}>
+          <option value="">...</option>
+          {options?.map(o => <option key={o.id} value={o.id}>{t(o.label)}</option>)}
+        </select>
+      ) : (
+        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} style={inputStyle} />
+      )}
+    </div>
   </div>
 );
 
-const PowerDisplay = ({ label, current, max, onChange, size = 10 }: { label: string; current: number; max: number; onChange: (v: number) => void; size?: number }) => {
+const PowerDisplay = ({ label, current, max, onChange, size = 14 }: { label: string; current: number; max: number; onChange: (v: number) => void; size?: number }) => {
+  const groupCount = Math.ceil(Math.max(max, current) / 5);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{ fontWeight: 'bold', fontSize: '13px', marginBottom: '4px', fontFamily: "'Georgia', serif" }}>{label}</div>
-      <div style={{ display: 'flex', gap: '2px' }}>
-        {Array.from({ length: max }).map((_, i) => {
-          const pos = i + 1;
-          const isFilled = pos <= current;
-          const isLast = pos === current && current > 0;
-          const isMax = pos === max;
-          return (
-            <div key={i} style={{ position: 'relative', marginLeft: pos === Math.floor(max / 2) + 1 ? 8 : 0 }}>
-              {isLast && (
-                <span style={{
-                  position: 'absolute', top: '-18px', left: '50%', transform: 'translateX(-50%)',
-                  fontSize: '16px', fontWeight: 'bold', color: 'var(--accent)', fontFamily: "'Georgia', serif"
-                }}>
-                  {current}
-                </span>
-              )}
-              <button
-                onClick={() => onChange(pos === current ? 0 : pos)}
-                style={{
-                  width: `${size}px`, height: `${size}px`,
-                  background: isFilled ? 'var(--dot-color)' : 'transparent',
-                  border: `1px solid ${isMax ? 'var(--accent)' : isFilled ? 'var(--dot-color)' : 'var(--border)'}`,
-                  borderRadius: '50%',
-                  cursor: 'pointer',
-                  padding: 0,
-                }}
-              />
-            </div>
-          );
-        })}
+      <div style={{ display: 'flex', gap: '8px' }}>
+        {Array.from({ length: groupCount }).map((_, group) => (
+          <div key={group} style={{ display: 'flex', gap: '2px' }}>
+            {Array.from({ length: 5 }).map((_, i) => {
+              const pos = group * 5 + i + 1;
+              const isFilled = pos <= current;
+              const isAvailable = pos <= max;
+              return (
+                <button
+                  key={pos}
+                  onClick={() => {
+                    if (isAvailable) {
+                      onChange(pos === current ? 0 : pos);
+                    }
+                  }}
+                  style={{
+                    width: `${size}px`, height: `${size}px`,
+                    background: isFilled ? 'var(--dot-color)' : 'transparent',
+                    border: `1px solid ${isFilled ? 'var(--dot-color)' : (isAvailable ? 'var(--border)' : 'transparent')}`,
+                    borderRadius: '50%',
+                    cursor: isAvailable ? 'pointer' : 'default',
+                    padding: 0,
+                    opacity: isAvailable ? 1 : 0.3,
+                    pointerEvents: isAvailable ? 'auto' : 'none',
+                  }}
+                />
+              );
+            })}
+          </div>
+        ))}
       </div>
-      <span style={{ fontSize: '9px', color: 'var(--muted)', marginTop: '2px' }}>{current}/{max}</span>
+      <span style={{ fontSize: '9px', color: 'var(--muted)', marginTop: '4px' }}>{current}/{max}</span>
     </div>
   );
 };
@@ -131,85 +136,99 @@ export const SheetPage1 = () => {
   const { updateMeta, updateAttribute, updateSkill, updateSpecification, updateVitae, updateWillpower, updateBloodSurge } = useCharacterStore();
   const isMobile = useIsMobile();
 
-  const [isCustomClan, setIsCustomClan] = useState(false);
-  const [isCustomNostalgia, setIsCustomNostalgia] = useState(false);
+  const [isCustomClan, setIsCustomClan] = useState(
+    () => !CLANS_LIST.some(c => c.id === character.meta.clan)
+  );
+  const [isCustomNostalgia, setIsCustomNostalgia] = useState(
+    () => !NOSTALGIA_DECADES.some(d => d.id === character.meta.nostalgia)
+  );
 
   const sheetWidth = isMobile ? '100%' : '210mm';
-  const attrCols = isMobile ? '1fr' : '1fr 1fr 1fr';
   
   return (
     <div id="character-sheet" style={{ ...sheetStyle, width: sheetWidth }}>
       {/* ===== 1. ШАПКА ===== */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 60px 1.2fr', gap: '6px', marginBottom: '10px' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '6px', marginBottom: '10px' }}>
         {/* Левая колонка */}
-        <div>
-          <HeaderRow label="Имя" value={character.meta.name} onChange={(v) => updateMeta('name', v)} />
-          <HeaderRow label="Видимый возраст" value={character.meta.visibleAge} onChange={(v) => updateMeta('visibleAge', v)} />
-          <HeaderRow label="Настоящий возраст" value={character.meta.trueAge} onChange={(v) => updateMeta('trueAge', v)} />
-          <HeaderRow label="Дата Становления" value={character.meta.embraceDate} onChange={(v) => updateMeta('embraceDate', v)} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <HeaderRow label={t('ui.name')} value={character.meta.name} onChange={(v) => updateMeta('name', v)} />
+          <HeaderRow label={t('ui.visible_age')} value={character.meta.visibleAge} onChange={(v) => updateMeta('visibleAge', v)} />
+          <HeaderRow label={t('ui.true_age')} value={character.meta.trueAge} onChange={(v) => updateMeta('trueAge', v)} />
+          <HeaderRow label={t('ui.embrace_date')} value={character.meta.embraceDate} onChange={(v) => updateMeta('embraceDate', v)} />
 
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
-             <input type="checkbox" checked={isCustomNostalgia} onChange={e => setIsCustomNostalgia(e.target.checked)} />
-             {isCustomNostalgia ? (
-               <HeaderRow label="Ностальгия" value={character.meta.nostalgia} onChange={(v) => updateMeta('nostalgia', v)} />
-             ) : (
-               <HeaderRow label="Ностальгия" value={character.meta.nostalgia} onChange={(v) => updateMeta('nostalgia', v)} isDropdown options={NOSTALGIA_DECADES} />
-             )}
+             <input type="checkbox" checked={isCustomNostalgia} onChange={e => setIsCustomNostalgia(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
+             <div style={{ flex: 1, minWidth: 0 }}>
+               {isCustomNostalgia ? (
+                 <HeaderRow label={t('ui.nostalgia')} value={character.meta.nostalgia} onChange={(v) => updateMeta('nostalgia', v)} />
+               ) : (
+                 <HeaderRow label={t('ui.nostalgia')} value={character.meta.nostalgia} onChange={(v) => updateMeta('nostalgia', v)} isDropdown options={NOSTALGIA_DECADES} />
+               )}
+             </div>
           </div>
 
-          <HeaderRow label="Вид" value={character.meta.type} onChange={(v) => updateMeta('type', v)} isDropdown options={VAMPIRE_TYPES} />
+          <HeaderRow label={t('ui.type')} value={character.meta.type} onChange={(v) => updateMeta('type', v)} isDropdown options={VAMPIRE_TYPES} />
         </div>
 
         {/* Центральная колонка — Анкх */}
         {!isMobile && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ width: '60px', flexShrink: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <span style={{ fontSize: '40px', lineHeight: 1, fontFamily: "'Georgia', serif" }}>†</span>
           </div>
         )}
 
         {/* Правая колонка */}
-        <div>
+        <div style={{ flex: 1.2, minWidth: 0 }}>
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
-             <input type="checkbox" checked={isCustomClan} onChange={e => setIsCustomClan(e.target.checked)} />
-             {isCustomClan ? (
-               <HeaderRow label="Клан" value={character.meta.clan} onChange={(v) => updateMeta('clan', v)} />
-             ) : (
-               <HeaderRow label="Клан" value={character.meta.clan} onChange={(v) => updateMeta('clan', v)} isDropdown options={CLANS_LIST} />
-             )}
+             <input type="checkbox" checked={isCustomClan} onChange={e => setIsCustomClan(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
+             <div style={{ flex: 1, minWidth: 0 }}>
+               {isCustomClan ? (
+                 <HeaderRow label={t('ui.clan')} value={character.meta.clan} onChange={(v) => updateMeta('clan', v)} />
+               ) : (
+                 <HeaderRow label={t('ui.clan')} value={character.meta.clan} onChange={(v) => updateMeta('clan', v)} isDropdown options={CLANS_LIST} />
+               )}
+             </div>
           </div>
           
-          <HeaderRow label="Проклятие клана" value={character.meta.clanBane} onChange={(v) => updateMeta('clanBane', v)} />
-          {/* Поколение и Модификатор */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <HeaderRow label="Поколение" value={character.meta.generation} onChange={(v) => updateMeta('generation', v)} isDropdown options={GENERATION_OPTIONS} labelWidth="75px" />
-            <HeaderRow label="Модификатор" value={character.meta.modifier} onChange={(v) => updateMeta('modifier', v)} labelWidth="85px" />
+          <HeaderRow label={t('ui.clan_bane')} value={character.meta.clanBane} onChange={(v) => updateMeta('clanBane', v)} />
+          
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <HeaderRow label={t('ui.generation')} value={character.meta.generation} onChange={(v) => updateMeta('generation', v)} isDropdown options={GENERATION_OPTIONS.map(v => ({ id: v, label: v }))} labelWidth="75px" />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <HeaderRow label={t('ui.modifier')} value={character.meta.modifier} onChange={(v) => updateMeta('modifier', v)} labelWidth="85px" />
+            </div>
           </div>
 
-          <HeaderRow label="Архетип" value={character.meta.archetype} onChange={(v) => updateMeta('archetype', v)} />
+          <HeaderRow label={t('ui.archetype')} value={character.meta.archetype} onChange={(v) => updateMeta('archetype', v)} />
 
-          {/* Сир и Вид */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px' }}>
-            <HeaderRow label="Сир" value={character.meta.sire} onChange={(v) => updateMeta('sire', v)} labelWidth="40px" />
-            <HeaderRow label="Вид" value={character.meta.sireType} onChange={(v) => updateMeta('sireType', v)} isDropdown options={SIRE_TYPES_LIST} labelWidth="40px" />
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ flex: 1.2, minWidth: 0 }}>
+              <HeaderRow label={t('ui.sire')} value={character.meta.sire} onChange={(v) => updateMeta('sire', v)} labelWidth="40px" />
+            </div>
+            <div style={{ flex: 1.5, minWidth: 0 }}>
+              <HeaderRow label={t('ui.sire_type')} value={character.meta.sireType} onChange={(v) => updateMeta('sireType', v)} isDropdown options={SIRE_TYPES_LIST} labelWidth="50px" />
+            </div>
           </div>
 
-          <HeaderRow label="Дисциплина от сира" value={character.meta.sireDiscipline} onChange={(v) => updateMeta('sireDiscipline', v)} />
+          <HeaderRow label={t('ui.sire_discipline')} value={character.meta.sireDiscipline} onChange={(v) => updateMeta('sireDiscipline', v)} isDropdown options={DISCIPLINES_LIST} />
         </div>
       </div>
 
       {/* ===== 2. ХАРАКТЕРИСТИКИ ===== */}
       <div style={{ border: `2px solid var(--border)`, marginBottom: '15px' }}>
-        <div style={{ background: 'var(--headerBg)', color: 'var(--text)', display: 'flex', fontWeight: 'bold', fontSize: '11px', letterSpacing: '0.1em', fontFamily: "'Georgia', serif" }}>
+        <div style={{ background: 'var(--headerBg)', color: 'var(--header-text, var(--text))', display: 'flex', fontWeight: 'bold', fontSize: '11px', letterSpacing: '0.1em', fontFamily: "'Georgia', serif" }}>
           {ATTR_GROUPS.map(g => (
-            <div key={g.title} style={{ flex: 1, textAlign: 'center', padding: '4px', borderLeft: `1px solid var(--border)` }}>{g.title}</div>
+            <div key={g.key} style={{ flex: 1, textAlign: 'center', padding: '4px', borderLeft: `1px solid var(--border)` }}>{t(g.title)}</div>
           ))}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: attrCols }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row' }}>
           {ATTR_GROUPS.map((group, gi) => (
-            <div key={group.key} style={{ borderRight: !isMobile && gi < 2 ? `1px solid var(--border)` : 'none', borderBottom: isMobile ? `1px solid var(--border)` : 'none', padding: '5px', minWidth: 0, overflow: 'hidden' }}>
+            <div key={group.key} style={{ flex: 1, borderRight: !isMobile && gi < 2 ? `1px solid var(--border)` : 'none', borderBottom: isMobile ? `1px solid var(--border)` : 'none', padding: '5px', minWidth: 0, overflow: 'hidden' }}>
               {group.attrs.map(attr => (
                 <div key={attr} style={{ marginBottom: '4px' }}>
-                  <div style={{ textAlign: 'center', fontSize: '11px', marginBottom: '4px', fontWeight: 'bold', fontFamily: "'Georgia', serif" }}>{ATTR_LABELS[attr]}</div>
+                  <div style={{ textAlign: 'center', fontSize: '11px', marginBottom: '4px', fontWeight: 'bold', fontFamily: "'Georgia', serif" }}>{t(ATTR_LABELS[attr])}</div>
                   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px' }}>
                     <div style={{ display: 'flex', gap: '2px' }}>
                       {Array.from({ length: 5 }).map((_, i) => {
@@ -241,14 +260,18 @@ export const SheetPage1 = () => {
       </div>
 
       {/* ===== 3. ВИТЭ И ВОЛЯ ===== */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '10px' : '20px', marginBottom: '15px', borderBottom: `2px solid var(--border)`, paddingBottom: '15px', alignItems: 'center' }}>
-        <PowerDisplay label="ВИТЭ" current={character.vitae.current} max={character.vitae.max} onChange={(v) => updateVitae(v)} size={14} />
-        <PowerDisplay label="ВОЛЯ" current={character.willpower.current} max={character.willpower.max} onChange={(v) => updateWillpower(v)} size={13} />
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '10px' : '20px', marginBottom: '15px', borderBottom: `2px solid var(--border)`, paddingBottom: '15px', alignItems: 'center' }}>
+        <div style={{ flex: 1, width: '100%' }}>
+          <PowerDisplay label={t('ui.vitae')} current={character.vitae.current} max={character.vitae.max} onChange={(v) => updateVitae(v)} size={14} />
+        </div>
+        <div style={{ flex: 1, width: '100%' }}>
+          <PowerDisplay label={t('ui.willpower')} current={character.willpower.current} max={character.willpower.max} onChange={(v) => updateWillpower(v)} size={13} />
+        </div>
       </div>
 
       {/* ===== 4. УСКОРЕНИЕ ===== */}
       <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-        <div style={{ fontWeight: 'bold', fontSize: '12px', letterSpacing: '0.1em', fontFamily: "'Georgia', serif" }}>УСКОРЕНИЕ</div>
+        <div style={{ fontWeight: 'bold', fontSize: '12px', letterSpacing: '0.1em', fontFamily: "'Georgia', serif" }}>{t('ui.blood_surge')}</div>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
           <DotRating total={5} value={character.bloodSurge} onChange={(v) => updateBloodSurge(v)} />
         </div>
@@ -259,50 +282,55 @@ export const SheetPage1 = () => {
 
       {/* ===== 6. НАВЫКИ ===== */}
       <div style={{ marginBottom: '15px', border: '1px solid var(--border)', padding: '4px' }}>
-        <div style={sectionHeaderStyle}>Навыки</div>
+        <div style={sectionHeaderStyle}>{t('ui.skills')}</div>
         {SKILLS_LIST.map(skill => (
-          <div key={skill} style={{ display: 'grid', gridTemplateColumns: isMobile ? '80px 60px 1fr 1fr 1fr' : '160px 110px 1fr 1fr 1fr', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '0px', marginBottom: '0px' }}>
-            <div style={{ fontSize: '11px', fontFamily: "'Georgia', serif" }}>{skill}</div>
-            <div>
-              <DotRating total={5} size={12} value={character.skills[skill]?.dots || 0} onChange={(v) => updateSkill(skill, v)} />
+          <div key={skill.id} style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--border)', width: '100%' }}>
+            <div style={{ fontSize: '11px', fontFamily: "'Georgia', serif", width: isMobile ? '80px' : '160px', flexShrink: 0 }}>{t(skill.label)}</div>
+            <div style={{ width: isMobile ? '60px' : '110px', flexShrink: 0 }}>
+              <DotRating total={5} size={12} value={character.skills[skill.id]?.dots || 0} onChange={(v) => updateSkill(skill.id, v)} />
             </div>
-            {[0, 1, 2].map((idx) => (
-              <input
-                key={idx}
-                type="text"
-                value={character.skills[skill]?.specifications?.[idx] || ''}
-                onChange={(e) => updateSpecification(skill, idx as 0 | 1 | 2, e.target.value)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  borderBottom: `1px dashed var(--border)`,
-                  outline: 'none',
-                  padding: '2px 4px',
-                  fontSize: '10px',
-                  color: 'var(--text)',
-                  width: '100%',
-                  fontFamily: "'Georgia', serif"
-                }}
-              />
-            ))}
+            <div style={{ display: 'flex', flex: 1, minWidth: 0, gap: '4px' }}>
+              {[0, 1, 2].map((idx) => (
+                <input
+                  key={idx}
+                  type="text"
+                  value={character.skills[skill.id]?.specifications?.[idx] || ''}
+                  onChange={(e) => updateSpecification(skill.id, idx as 0 | 1 | 2, e.target.value)}
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: `1px dashed var(--border)`,
+                    outline: 'none',
+                    padding: '2px 4px',
+                    fontSize: '10px',
+                    color: 'var(--text)',
+                    fontFamily: "'Georgia', serif"
+                  }}
+                />
+              ))}
+            </div>
           </div>
         ))}
       </div>
 
       {/* ===== 7. РЕСУРСЫ + ПРЕДМЕТЫ ===== */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '15px' }}>
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '15px', flexDirection: isMobile ? 'column' : 'row' }}>
         <div style={{ flex: 3, minWidth: 0 }}>
-          <div style={{ ...sectionHeaderStyle, textAlign: 'center' }}>Ресурсы</div>
+          <div style={{ ...sectionHeaderStyle, textAlign: 'center' }}>{t('ui.resources')}</div>
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '3px' }}>
               <input
                 type="text"
                 value={character.resources[i]?.name || ''}
                 onChange={(e) => useCharacterStore.getState().updateResource(i, 'name', e.target.value)}
-                style={{ ...inputStyle, width: '90px' }}
+                style={{ ...inputStyle, width: '90px', flexShrink: 0 }}
               />
-              <DotRating total={5} value={character.resources[i]?.dots || 0} onChange={(v) => useCharacterStore.getState().updateResource(i, 'dots', v)} size={12} />
-              <div style={{ display: 'flex', gap: '2px' }}>
+              <div style={{ width: '80px', flexShrink: 0 }}>
+                <DotRating total={5} value={character.resources[i]?.dots || 0} onChange={(v) => useCharacterStore.getState().updateResource(i, 'dots', v)} size={12} />
+              </div>
+              <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
                 {Array.from({ length: 5 }).map((_, si) => (
                   <button
                     key={si}
@@ -321,12 +349,12 @@ export const SheetPage1 = () => {
             </div>
           ))}
         </div>
-        <div style={{ flex: 2, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ ...sectionHeaderStyle, textAlign: 'center' }}>Предметы</div>
+        <div style={{ flex: 2, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <div style={{ ...sectionHeaderStyle, textAlign: 'center' }}>{t('ui.items')}</div>
           <textarea
             value={character.items}
             onChange={(e) => useCharacterStore.getState().updateField('items', e.target.value)}
-            placeholder="Список предметов..."
+            placeholder={t('placeholders.items')}
             style={{
               flex: 1,
               background: 'var(--panel)',
@@ -338,11 +366,12 @@ export const SheetPage1 = () => {
               fontFamily: "'Georgia', serif",
               resize: 'none',
               width: '100%',
+              boxSizing: 'border-box',
+              minHeight: '120px'
             }}
           />
         </div>
       </div>
-
     </div>
   );
 };

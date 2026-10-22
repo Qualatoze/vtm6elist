@@ -1,3 +1,5 @@
+import { t } from './i18n';
+
 export interface CharacterSheet {
   id: string;
   meta: {
@@ -49,56 +51,176 @@ export interface CharacterSheet {
   appliedLifePaths?: (string | null)[];
 }
 
-export const SKILLS_LIST = [
-  "Атлетика", "Наблюдательность", "Ремесло", "Самовыражение", "Бой",
-  "Расследование", "Знания", "Медицина", "Убеждение", "Стрельба",
-  "Саботаж", "Хитрость", "Выживание"
+// ============================================================
+// СПРАВОЧНИКИ — массивы {id, label}
+// label берётся из i18n при инициализации модуля
+// ============================================================
+
+export const SKILLS_LIST: Array<{ id: string; label: string }> = [
+  { id: 'athletics', label: 'skills.athletics' },
+  { id: 'awareness', label: 'skills.awareness' },
+  { id: 'craft', label: 'skills.craft' },
+  { id: 'expression', label: 'skills.expression' },
+  { id: 'fighting', label: 'skills.fighting' },
+  { id: 'investigation', label: 'skills.investigation' },
+  { id: 'knowledge', label: 'skills.knowledge' },
+  { id: 'medicine', label: 'skills.medicine' },
+  { id: 'persuasion', label: 'skills.persuasion' },
+  { id: 'sabotage', label: 'skills.sabotage' },
+  { id: 'shooting', label: 'skills.shooting' },
+  { id: 'subterfuge', label: 'skills.subterfuge' },
+  { id: 'survival', label: 'skills.survival' },
 ];
 
-export const CLANS_LIST = [
-  "Бруха", "Гангрел", "Ласомбра", "Министри", "Носферату",
-  "Тореадор", "Вентру", "Бану Хаким", "Джованни", "Малкавиан",
-  "Равнос", "Салобри", "Тремер", "Цимисхи", "Каитиф"
+export const CLANS_LIST: Array<{ id: string; label: string }> = [
+  { id: 'brujah', label: 'clans.brujah' },
+  { id: 'gangrel', label: 'clans.gangrel' },
+  { id: 'lasombra', label: 'clans.lasombra' },
+  { id: 'ministry', label: 'clans.ministry' },
+  { id: 'nosferatu', label: 'clans.nosferatu' },
+  { id: 'toreador', label: 'clans.toreador' },
+  { id: 'ventrue', label: 'clans.ventrue' },
+  { id: 'banu_haqim', label: 'clans.banu_haqim' },
+  { id: 'giovanni', label: 'clans.giovanni' },
+  { id: 'malkavian', label: 'clans.malkavian' },
+  { id: 'ravnos', label: 'clans.ravnos' },
+  { id: 'salubri', label: 'clans.salubri' },
+  { id: 'tremere', label: 'clans.tremere' },
+  { id: 'tzimisce', label: 'clans.tzimisce' },
+  { id: 'caitiff', label: 'clans.caitiff' },
 ];
 
-export const VAMPIRE_TYPES = [
-  "Вампир (неонат)", "Анцилла", "Старейшина", "Веспер", "Тонкий"
+export const DISCIPLINES_LIST: Array<{ id: string; label: string }> = [
+  { id: 'animalism', label: 'disciplines.animalism' },
+  { id: 'auspex', label: 'disciplines.auspex' },
+  { id: 'blood_sorcery', label: 'disciplines.blood_sorcery' },
+  { id: 'celerity', label: 'disciplines.celerity' },
+  { id: 'corruption', label: 'disciplines.corruption' },
+  { id: 'dominate', label: 'disciplines.dominate' },
+  { id: 'fortitude', label: 'disciplines.fortitude' },
+  { id: 'necromancy', label: 'disciplines.necromancy' },
+  { id: 'obfuscate', label: 'disciplines.obfuscate' },
+  { id: 'oblivion', label: 'disciplines.oblivion' },
+  { id: 'potence', label: 'disciplines.potence' },
+  { id: 'presence', label: 'disciplines.presence' },
+  { id: 'tellurgy', label: 'disciplines.tellurgy' },
+  { id: 'vicissitude', label: 'disciplines.vicissitude' },
+];
+
+export const NATURES_LIST: Array<{ id: string; label: string }> = [
+  { id: 'autocrat', label: 'natures.autocrat' },
+  { id: 'bon_vivant', label: 'natures.bon_vivant' },
+  { id: 'bravo', label: 'natures.bravo' },
+  { id: 'gallant', label: 'natures.gallant' },
+  { id: 'perfectionist', label: 'natures.perfectionist' },
+  { id: 'romantic', label: 'natures.romantic' },
+  { id: 'scientist', label: 'natures.scientist' },
+  { id: 'survivor', label: 'natures.survivor' },
+];
+
+export const VAMPIRE_TYPES: Array<{ id: string; label: string }> = [
+  { id: 'vampire_neonate', label: 'creation_types.vampire_neonate' },
+  { id: 'ancilla', label: 'creation_types.ancilla' },
+  { id: 'elder', label: 'creation_types.elder' },
+  { id: 'duskborn', label: 'creation_types.duskborn' },
+  { id: 'thin_blood', label: 'creation_types.thin_blood' },
+];
+
+export const SIRE_TYPES_LIST: Array<{ id: string; label: string }> = [
+  { id: 'adoptive_sire', label: 'sire_types.adoptive_sire' },
+  { id: 'brood_child', label: 'sire_types.brood_child' },
+  { id: 'caring_sire', label: 'sire_types.caring_sire' },
+  { id: 'cruel_sire', label: 'sire_types.cruel_sire' },
+  { id: 'manipulative_sire', label: 'sire_types.manipulative_sire' },
+  { id: 'secretive_sire', label: 'sire_types.secretive_sire' },
+  { id: 'unknown_sire', label: 'sire_types.unknown_sire' },
+  { id: 'vigilant_sire', label: 'sire_types.vigilant_sire' },
 ];
 
 export const NOSTALGIA_DECADES = [
-  "1920-е", "1930-е", "1940-е", "1950-е", "1960-е", "1970-е",
-  "1980-е", "1990-е", "2000-е", "2010-е", "2020-е"
+  { id: '1920s', label: '1920-е' },
+  { id: '1930s', label: '1930-е' },
+  { id: '1940s', label: '1940-е' },
+  { id: '1950s', label: '1950-е' },
+  { id: '1960s', label: '1960-е' },
+  { id: '1970s', label: '1970-е' },
+  { id: '1980s', label: '1980-е' },
+  { id: '1990s', label: '1990-е' },
+  { id: '2000s', label: '2000-е' },
+  { id: '2010s', label: '2010-е' },
+  { id: '2020s', label: '2020-е' },
 ];
+
+// ============================================================
+// АВТОЗАПОЛНЕНИЕ — справочники (ключи на английских ID)
+// ============================================================
 
 export const CLAN_DATA: Record<string, { bane: string; beast: string; rage: string; disciplines: string[] }> = {
-  "Бруха": { bane: "Кипящая страсть", beast: "Неприятие власти", rage: "Бунт", disciplines: ["Стремительность", "Мощь", "Величие"] },
-  "Гангрел": { bane: "Принятый Зверь", beast: "Звериное начало", rage: "Животные Порывы", disciplines: ["Анимализм", "Стремительность", "Стойкость"] },
-  "Ласомбра": { bane: "Теневое присутствие", beast: "Каратель", rage: "Безжалостность", disciplines: ["Доминирование", "Мощь", "Забвение"] },
-  "Министри": { bane: "Изъян солнечного света", beast: "Соблазнитель", rage: "Прегрешение", disciplines: ["Порча", "Сокрытие", "Величие"] },
-  "Носферату": { bane: "Внешний Зверь", beast: "Скрытный", rage: "Криптомания", disciplines: ["Анимализм", "Сокрытие", "Мощь"] },
-  "Тореадор": { bane: "Жажда красоты", beast: "Идол", rage: "Восхищение", disciplines: ["Ясновидение", "Стремительность", "Величие"] },
-  "Вентру": { bane: "Изысканный вкус", beast: "Властитель", rage: "Превосходство", disciplines: ["Доминирование", "Стойкость", "Величие"] },
-  "Бану Хаким": { bane: "В разработке", beast: "В разработке", rage: "В разработке", disciplines: ["Кровавое Чародейство", "Стремительность", "Сокрытие"] },
-  "Джованни": { bane: "В разработке", beast: "В разработке", rage: "В разработке", disciplines: ["Ясновидение", "Мощь", "Некромантия"] },
-  "Малкавиан": { bane: "В разработке", beast: "В разработке", rage: "В разработке", disciplines: ["Ясновидение", "Доминирование", "Сокрытие"] },
-  "Равнос": { bane: "В разработке", beast: "В разработке", rage: "В разработке", disciplines: ["Сокрытие", "Величие", "Теллургия"] },
-  "Салобри": { bane: "В разработке", beast: "В разработке", rage: "В разработке", disciplines: ["Ясновидение", "Стойкость", "Сокрытие"] },
-  "Тремер": { bane: "В разработке", beast: "В разработке", rage: "В разработке", disciplines: ["Ясновидение", "Доминирование", "Кровавое Чародейство"] },
-  "Цимисхи": { bane: "В разработке", beast: "В разработке", rage: "В разработке", disciplines: ["Анимализм", "Доминирование", "Изменчивость"] },
-  "Каитиф": { bane: "В разработке", beast: "В разработке", rage: "В разработке", disciplines: [] }
+  'brujah': { bane: 'clans.brujah_bane', beast: 'clans.brujah_beast', rage: 'clans.brujah_rage', disciplines: ['celerity', 'potence', 'presence'] },
+  'gangrel': { bane: 'clans.gangrel_bane', beast: 'clans.gangrel_beast', rage: 'clans.gangrel_rage', disciplines: ['animalism', 'celerity', 'fortitude'] },
+  'lasombra': { bane: 'clans.lasombra_bane', beast: 'clans.lasombra_beast', rage: 'clans.lasombra_rage', disciplines: ['dominate', 'potence', 'oblivion'] },
+  'ministry': { bane: 'clans.ministry_bane', beast: 'clans.ministry_beast', rage: 'clans.ministry_rage', disciplines: ['corruption', 'obfuscate', 'presence'] },
+  'nosferatu': { bane: 'clans.nosferatu_bane', beast: 'clans.nosferatu_beast', rage: 'clans.nosferatu_rage', disciplines: ['animalism', 'obfuscate', 'potence'] },
+  'toreador': { bane: 'clans.toreador_bane', beast: 'clans.toreador_beast', rage: 'clans.toreador_rage', disciplines: ['auspex', 'celerity', 'presence'] },
+  'ventrue': { bane: 'clans.ventrue_bane', beast: 'clans.ventrue_beast', rage: 'clans.ventrue_rage', disciplines: ['dominate', 'fortitude', 'presence'] },
+  'banu_haqim': { bane: 'clans.banu_haqim_bane', beast: 'clans.banu_haqim_beast', rage: 'clans.banu_haqim_rage', disciplines: ['blood_sorcery', 'celerity', 'obfuscate'] },
+  'giovanni': { bane: 'clans.giovanni_bane', beast: 'clans.giovanni_beast', rage: 'clans.giovanni_rage', disciplines: ['auspex', 'potence', 'necromancy'] },
+  'malkavian': { bane: 'clans.malkavian_bane', beast: 'clans.malkavian_beast', rage: 'clans.malkavian_rage', disciplines: ['auspex', 'dominate', 'obfuscate'] },
+  'ravnos': { bane: 'clans.ravnos_bane', beast: 'clans.ravnos_beast', rage: 'clans.ravnos_rage', disciplines: ['obfuscate', 'presence', 'tellurgy'] },
+  'salubri': { bane: 'clans.salubri_bane', beast: 'clans.salubri_beast', rage: 'clans.salubri_rage', disciplines: ['auspex', 'fortitude', 'obfuscate'] },
+  'tremere': { bane: 'clans.tremere_bane', beast: 'clans.tremere_beast', rage: 'clans.tremere_rage', disciplines: ['auspex', 'dominate', 'blood_sorcery'] },
+  'tzimisce': { bane: 'clans.tzimisce_bane', beast: 'clans.tzimisce_beast', rage: 'clans.tzimisce_rage', disciplines: ['animalism', 'dominate', 'vicissitude'] },
+  'caitiff': { bane: '', beast: '', rage: '', disciplines: [] },
 };
 
-export const DISCIPLINES_LIST = [
-  "Анимализм", "Ясновидение", "Кровавое Чародейство", "Стремительность",
-  "Доминирование", "Стойкость", "Сокрытие", "Забвение", "Мощь", "Величие",
-  "Изменчивость", "Теллургия", "Некромантия", "Порча"
+export const NATURE_TO_FLASH: Record<string, string> = {
+  'autocrat': 'natures.autocrat_flash',
+  'bon_vivant': 'natures.bon_vivant_flash',
+  'bravo': 'natures.bravo_flash',
+  'gallant': 'natures.gallant_flash',
+  'perfectionist': 'natures.perfectionist_flash',
+  'romantic': 'natures.romantic_flash',
+  'scientist': 'natures.scientist_flash',
+  'survivor': 'natures.survivor_flash',
+};
+
+export const SIRE_TYPE_TO_DISCIPLINE: Record<string, string> = {
+  'adoptive_sire': 'celerity',
+  'brood_child': 'potence',
+  'caring_sire': 'fortitude',
+  'cruel_sire': 'dominate',
+  'manipulative_sire': 'dominate',
+  'secretive_sire': 'auspex',
+  'unknown_sire': 'celerity',
+  'vigilant_sire': 'auspex',
+};
+
+export const MORTAL_LIFE_PATHS: Record<string, string[]> = {
+  'artist': ['awareness', 'craft', 'expression', 'knowledge', 'persuasion'],
+  'corporate_executive': ['awareness', 'investigation', 'knowledge', 'persuasion', 'subterfuge'],
+  'criminal': ['athletics', 'awareness', 'fighting', 'sabotage', 'subterfuge'],
+  'holy_person': ['awareness', 'expression', 'knowledge', 'medicine', 'persuasion'],
+  'hunter': ['awareness', 'craft', 'fighting', 'shooting', 'survival'],
+  'military': ['athletics', 'fighting', 'medicine', 'shooting', 'survival'],
+  'politician': ['awareness', 'investigation', 'knowledge', 'persuasion', 'subterfuge'],
+  'technician': ['athletics', 'craft', 'fighting', 'sabotage', 'subterfuge'],
+};
+
+export const VAMPIRE_LIFE_PATHS: Record<string, string[]> = {
+  'blood_deliverer': ['athletics', 'awareness', 'persuasion', 'sabotage', 'subterfuge'],
+  'clean_up_crew': ['athletics', 'fighting', 'investigation', 'sabotage', 'subterfuge'],
+  'hound': ['fighting', 'investigation', 'shooting', 'subterfuge', 'survival'],
+  'diplomat': ['awareness', 'expression', 'investigation', 'persuasion', 'subterfuge'],
+  'harpy': ['awareness', 'expression', 'knowledge', 'persuasion', 'subterfuge'],
+  'sheriff': ['awareness', 'investigation', 'knowledge', 'persuasion', 'survival'],
+};
+
+export const ALL_LIFE_PATHS = [
+  ...Object.keys(MORTAL_LIFE_PATHS),
+  ...Object.keys(VAMPIRE_LIFE_PATHS),
 ];
 
-// ============================================================
-// АВТОЗАПОЛНЕНИЕ — справочники (не трогает UI, только данные)
-// ============================================================
-
-// --- Поколение → Модификатор (pdf: категории Поколений) ---
+// --- Поколение → Модификатор ---
 export const GENERATION_TO_MODIFIER = (generation: string): string => {
   const num = parseInt(generation, 10);
   if (isNaN(num)) return '1';
@@ -111,66 +233,92 @@ export const GENERATION_TO_MODIFIER = (generation: string): string => {
 
 // --- Вид вампира → Поколение по умолчанию ---
 export const VAMPIRE_TYPE_TO_GENERATION: Record<string, string> = {
-  "Вампир (неонат)": "13-е",
-  "Анцилла":         "10-е",
-  "Старейшина":      "8-е",
-  "Веспер":          "15-е",
-  "Тонкий":          "15-е"
+  'vampire_neonate': '13',
+  'ancilla':         '10',
+  'elder':          '8',
+  'duskborn':       '15',
+  'thin_blood':     '15',
 };
 
-// --- Сир → Дисциплина от сира (pdf: таблица «Виды сиров») ---
-export const SIRE_TYPES_LIST = [
-  "Приёмный сир", "Дитя выводка", "Заботливый сир", "Жестокий сир",
-  "Сир-манипулятор", "Скрытный сир", "Неизвестный сир", "Бдительный сир"
-];
+// ============================================================
+// УТИЛИТА НОРМАЛИЗАЦИИ — для миграции старых сохранений
+// Превращает русские названия в канонические ID
+// ============================================================
 
-export const SIRE_TYPE_TO_DISCIPLINE: Record<string, string> = {
-  "Приёмный сир":     "Стремительность",  // Если клан приемного сира неизвестен, берем базовую
-  "Дитя выводка":     "Мощь",             // В оригинале "1 пункт Мощи"
-  "Заботливый сир":   "Стойкость",        // Стойкость / Мощь / Величие — берём первую
-  "Жестокий сир":     "Доминирование",    // Доминирование / Стойкость / Сокрытие
-  "Сир-манипулятор":  "Доминирование",    // Доминирование / Мощь / Величие
-  "Скрытный сир":     "Ясновидение",      // Ясновидение / Стремительность / Сокрытие
-  "Неизвестный сир":  "Стремительность",  // Стремительность / Стойкость / Мощь
-  "Бдительный сир":   "Ясновидение"       // Ясновидение / Доминирование / Стойкость
+const RU_TO_ID: Record<string, string> = {
+  // Кланы
+  'Бруха': 'brujah', 'Гангрел': 'gangrel', 'Ласомбра': 'lasombra', 'Министри': 'ministry',
+  'Носферату': 'nosferatu', 'Тореадор': 'toreador', 'Вентру': 'ventrue', 'Бану Хаким': 'banu_haqim',
+  'Джованни': 'giovanni', 'Малкавиан': 'malkavian', 'Равнос': 'ravnos', 'Салобри': 'salubri',
+  'Тремер': 'tremere', 'Цимисхи': 'tzimisce', 'Каитиф': 'caitiff',
+
+  // Навыки
+  'Атлетика': 'athletics', 'Наблюдательность': 'awareness', 'Ремесло': 'craft', 'Самовыражение': 'expression',
+  'Бой': 'fighting', 'Расследование': 'investigation', 'Знания': 'knowledge', 'Медицина': 'medicine',
+  'Убеждение': 'persuasion', 'Стрельба': 'shooting', 'Саботаж': 'sabotage', 'Хитрость': 'subterfuge',
+  'Выживание': 'survival',
+
+  // Дисциплины
+  'Анимализм': 'animalism', 'Ясновидение': 'auspex', 'Кровавое Чародейство': 'blood_sorcery',
+  'Стремительность': 'celerity', 'Порча': 'corruption', 'Доминирование': 'dominate',
+  'Стойкость': 'fortitude', 'Некромантия': 'necromancy', 'Сокрытие': 'obfuscate',
+  'Забвение': 'oblivion', 'Мощь': 'potence', 'Величие': 'presence',
+  'Теллургия': 'tellurgy', 'Изменчивость': 'vicissitude',
+
+  // Натуры
+  'Автократ': 'autocrat', 'Бонвиван': 'bon_vivant', 'Задира': 'bravo', 'Галант': 'gallant',
+  'Перфекционист': 'perfectionist', 'Романтик': 'romantic', 'Учёный': 'scientist', 'Выживший': 'survivor',
+
+  // Виды вампиров
+  'Вампир (неонат)': 'vampire_neonate', 'Анцилла': 'ancilla', 'Старейшина': 'elder',
+  'Веспер': 'duskborn', 'Тонкий': 'thin_blood',
+
+  // Жизненные пути (мёртвые)
+  'Художник': 'artist', 'Руководитель компании': 'corporate_executive', 'Преступник': 'criminal',
+  'Служитель веры': 'holy_person', 'Охотник': 'hunter', 'Военный': 'military', 'Политик': 'politician',
+  'Техник': 'technician',
+
+  // Жизненные пути (вампиры)
+  'Доставщик крови': 'blood_deliverer', 'Группа зачистки': 'clean_up_crew', 'Гончая': 'hound',
+  'Дипломат': 'diplomat', 'Гарпия': 'harpy', 'Шериф': 'sheriff',
+
+  // Виды сиров
+  'Приёмный сир': 'adoptive_sire', 'Дитя выводка': 'brood_child', 'Заботливый сир': 'caring_sire',
+  'Жестокий сир': 'cruel_sire', 'Сир-манипулятор': 'manipulative_sire', 'Скрытный сир': 'secretive_sire',
+  'Неизвестный сир': 'unknown_sire', 'Бдительный сир': 'vigilant_sire',
+
+  // Ностальгия (декады)
+  '1920-е': '1920s', '1930-е': '1930s', '1940-е': '1940s', '1950-е': '1950s',
+  '1960-е': '1960s', '1970-е': '1970s', '1980-е': '1980s', '1990-е': '1990s',
+  '2000-е': '2000s', '2010-е': '2010s', '2020-е': '2020s',
 };
 
-// --- Натура → Вспышка (pdf: таблица Натур) ---
-export const NATURES_LIST = [
-  "Автократ", "Бонвиван", "Задира", "Галант",
-  "Перфекционист", "Романтик", "Учёный", "Выживший"
-];
+interface CreationRules {
+  paths: number;
+  attrs: string;
+  disc: string;
+  powers: number;
+  merits: number;
+  traits: number | string;
+  skills: number;
+  resources: number;
+  maxDisc: number;
+  maxAttr: number;
+}
 
-export const NATURE_TO_FLASH: Record<string, string> = {
-  "Автократ":       "Слушайте меня",
-  "Бонвиван":       "Искать веселье",
-  "Задира":         "Право силы",
-  "Галант":         "Гвоздь программы",
-  "Перфекционист":  "Перфекционизм",
-  "Романтик":       "Жертва любви",
-  "Учёный":         "Критический взгляд",
-  "Выживший":       "Инстинкт выжившего"
+export const CREATION_RULES: Record<string, CreationRules> = {
+  'vampire_neonate': { paths: 2, attrs: '7/5/3', disc: '3+1', powers: 4, merits: 1, traits: 2, skills: 8, resources: 3, maxDisc: 5, maxAttr: 5 },
+  'ancilla': { paths: 3, attrs: '8/6/4', disc: '5+1', powers: 6, merits: 2, traits: 3, skills: 8, resources: 5, maxDisc: 6, maxAttr: 6 },
+  'elder': { paths: 4, attrs: '9/7/5', disc: '7+1', powers: 8, merits: 3, traits: 4, skills: 8, resources: 7, maxDisc: 8, maxAttr: 8 },
+  'duskborn': { paths: 2, attrs: '6/4/3', disc: '2+1', powers: 3, merits: 1, traits: 1, skills: 8, resources: 2, maxDisc: 5, maxAttr: 5 },
+  'thin_blood': { paths: 2, attrs: '6/4/3', disc: '1+1', powers: 2, merits: 2, traits: '-', skills: 8, resources: 1, maxDisc: 5, maxAttr: 5 },
 };
 
-// --- Жизненные пути → стартовые навыки (по 1 точке, если пусто) ---
-export const MORTAL_LIFE_PATHS: Record<string, string[]> = {
-  "Художник":              ["Наблюдательность", "Ремесло", "Самовыражение", "Знания", "Убеждение"],
-  "Руководитель компании": ["Наблюдательность", "Расследование", "Знания", "Убеждение", "Хитрость"],
-  "Преступник":            ["Атлетика", "Наблюдательность", "Бой", "Саботаж", "Хитрость"],
-  "Служитель веры":        ["Наблюдательность", "Самовыражение", "Знания", "Медицина", "Убеждение"],
-  "Охотник":               ["Наблюдательность", "Ремесло", "Бой", "Стрельба", "Выживание"],
-  "Военный":               ["Атлетика", "Бой", "Медицина", "Стрельба", "Выживание"],
-  "Политик":               ["Наблюдательность", "Расследование", "Знания", "Убеждение", "Хитрость"],
-  "Техник":                ["Атлетика", "Ремесло", "Бой", "Саботаж", "Хитрость"]
-};
-
-export const VAMPIRE_LIFE_PATHS: Record<string, string[]> = {
-  "Доставщик крови": ["Атлетика", "Наблюдательность", "Убеждение", "Саботаж", "Хитрость"],
-  "Группа зачистки": ["Атлетика", "Бой", "Расследование", "Саботаж", "Хитрость"],
-  "Гончая":          ["Бой", "Расследование", "Стрельба", "Хитрость", "Выживание"],
-  "Дипломат":        ["Наблюдательность", "Самовыражение", "Расследование", "Убеждение", "Хитрость"],
-  "Гарпия":          ["Наблюдательность", "Самовыражение", "Знания", "Убеждение", "Хитрость"],
-  "Шериф":           ["Наблюдательность", "Расследование", "Знания", "Убеждение", "Выживание"]
-};
-
-export const ALL_LIFE_PATHS = [...Object.keys(MORTAL_LIFE_PATHS), ...Object.keys(VAMPIRE_LIFE_PATHS)];
+export function normalizeId(value: string): string {
+  if (!value) return value;
+  // Если уже ID (lowercase, только латиница/подчёркивания) — возвращаем как есть
+  if (/^[a-z_]+$/.test(value)) return value;
+  // Иначе пробуем найти по русскому названию
+  const found = RU_TO_ID[value];
+  return found || value;
+}

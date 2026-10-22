@@ -1,24 +1,26 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { CharacterSheet, SKILLS_LIST, CLAN_DATA, VAMPIRE_TYPES, NOSTALGIA_DECADES, GENERATION_TO_MODIFIER, VAMPIRE_TYPE_TO_GENERATION, SIRE_TYPE_TO_DISCIPLINE, NATURE_TO_FLASH, MORTAL_LIFE_PATHS, VAMPIRE_LIFE_PATHS } from './types';
+import { CharacterSheet, SKILLS_LIST, CLAN_DATA, VAMPIRE_TYPES, NOSTALGIA_DECADES, GENERATION_TO_MODIFIER, VAMPIRE_TYPE_TO_GENERATION, SIRE_TYPE_TO_DISCIPLINE, NATURE_TO_FLASH, MORTAL_LIFE_PATHS, VAMPIRE_LIFE_PATHS, normalizeId } from './types';
+import { t } from './i18n';
 
 const generateId = () => crypto.randomUUID();
 
 const initialSkills: Record<string, { dots: number; specifications: [string, string, string] }> =
-  SKILLS_LIST.reduce((acc, skill) => ({ ...acc, [skill]: { dots: 0, specifications: ['', '', ''] } }), {});
+  SKILLS_LIST.reduce((acc, skill) => ({ ...acc, [skill.id]: { dots: 0, specifications: ['', '', ''] } }), {});
 
 const normalizeDiscipline = (d: any) => ({
   id: d.id || generateId(),
-  name: d.name || '',
-  dots: d.dots || 0,
-  powersList: (d.powersList || (d.powers ? [d.powers, '', '', '', ''] : ['', '', '', '', ''])) as [string, string, string, string, string],
+  name: normalizeId(d.name || ''),
+  dots: Math.min(d.dots || 0, 5),
+  // Миграция со старого поля powers (строка) на powersList (массив из 5 строк)
+  powersList: Array.isArray(d.powersList) ? d.powersList : (d.powers ? d.powers.split('\n').slice(0, 5).padEnd(5, '') : ['', '', '', '', '']) as [string, string, string, string, string],
 });
 
 export const createEmptyCharacter = (): CharacterSheet => ({
   id: generateId(),
   meta: {
-    name: '', visibleAge: '', trueAge: '', embraceDate: '', nostalgia: '1980-е', type: 'Вампир (неонат)',
-    clan: '', clanBane: '', generation: '13-е', modifier: '1', archetype: '', sire: '', sireType: '', sireDiscipline: ''
+    name: '', visibleAge: '', trueAge: '', embraceDate: '', nostalgia: '1980s', type: 'vampire_neonate',
+    clan: '', clanBane: '', generation: '13', modifier: '1', archetype: '', sire: '', sireType: '', sireDiscipline: ''
   },
   attributes: {
     physical: { strength: 1, dexterity: 1, stamina: 1 },
@@ -30,7 +32,7 @@ export const createEmptyCharacter = (): CharacterSheet => ({
   bloodSurge: 0,
   humanity: { path: 4, beast: 0, natureCounter: 0 },
   skills: { ...initialSkills },
-  resources: [{ name: 'Богатство', dots: 0, squares: 0, notes: '' }],
+  resources: [{ name: t('resources.wealth'), dots: 0, squares: 0, notes: '' }],
   items: '',
   disciplines: Array.from({ length: 6 }).map((_, i) => ({ id: generateId(), name: '', dots: 0, powersList: ['', '', '', '', ''] as [string, string, string, string, string] })),
   lifePaths: [], clanTraits: '', merits: '', flaws: '', notes: '',
@@ -81,14 +83,16 @@ const updateActive = (state: CharacterStore, updater: (c: CharacterSheet) => Cha
   };
 };
 
+const wasI18nKey = (v?: string) => !!v && /^[a-z_]+(\.[a-z_]+)+$/.test(v);
+
 const normalizeCharacter = (c: CharacterSheet): CharacterSheet => ({
   ...c,
   id: c.id || generateId(),
   disciplines: (c.disciplines || []).map(normalizeDiscipline),
   skills: Object.fromEntries(
     SKILLS_LIST.map(skill => {
-      const s = c.skills?.[skill];
-      return [skill, {
+      const s = c.skills?.[skill.id];
+      return [skill.id, {
         dots: s?.dots ?? 0,
         specifications: [
           s?.specifications?.[0] || '',
@@ -98,6 +102,22 @@ const normalizeCharacter = (c: CharacterSheet): CharacterSheet => ({
       }];
     })
   ),
+  meta: c.meta ? {
+    ...c.meta,
+    type: normalizeId(c.meta.type || ''),
+    clan: normalizeId(c.meta.clan || ''),
+    sireType: normalizeId(c.meta.sireType || ''),
+    nostalgia: normalizeId(c.meta.nostalgia || ''),
+    clanBane: wasI18nKey(c.meta.clanBane) ? t(c.meta.clanBane) : c.meta.clanBane,
+  } : c.meta,
+  beast: c.beast ? {
+    clanBeast: wasI18nKey(c.beast.clanBeast) ? t(c.beast.clanBeast) : (c.beast.clanBeast || ''),
+    rage: wasI18nKey(c.beast.rage) ? t(c.beast.rage) : (c.beast?.rage || ''),
+  } : c.beast,
+  nature: c.nature ? {
+    ...c.nature,
+    flash: wasI18nKey(c.nature.flash) ? t(c.nature.flash) : (c.nature.flash || ''),
+  } : c.nature,
   lifePaths: c.lifePaths || [],
   resources: c.resources || [],
   appliedLifePaths: c.appliedLifePaths || [null, null, null, null, null, null, null, null],
@@ -131,11 +151,12 @@ export const useCharacterStore = create<CharacterStore>()(
         if (field === 'nature') {
           const natureNested = nested as { indulgence?: string };
           if (natureNested.indulgence !== undefined) {
-            const oldAutoFlash = NATURE_TO_FLASH[c.nature?.indulgence];
+            const normalizedNature = normalizeId(natureNested.indulgence);
+            const oldAutoFlash = NATURE_TO_FLASH[normalizeId(c.nature?.indulgence || '')];
             const isUntouched = !c.nature?.flash || c.nature.flash === oldAutoFlash;
-            const newFlash = NATURE_TO_FLASH[natureNested.indulgence];
+            const newFlash = NATURE_TO_FLASH[normalizedNature];
             if (newFlash && isUntouched) {
-              updated.flash = newFlash;
+              updated.flash = t(newFlash);
             }
           }
         }
@@ -148,20 +169,28 @@ export const useCharacterStore = create<CharacterStore>()(
         let newMeta = { ...c.meta, [field]: value };
         let newChar = { ...c, meta: newMeta };
 
-        if (field === 'clan' && CLAN_DATA[value]) {
-          const data = CLAN_DATA[value];
-          const oldData = CLAN_DATA[c.meta.clan];
+        if (field === 'clan') {
+          const normalizedClan = normalizeId(value);
+          const data = CLAN_DATA[normalizedClan];
+          const oldData = CLAN_DATA[normalizeId(c.meta.clan || '')];
+
+          // Кастомный клан: bane/beast/rage/disciplines не трогаем
+          if (!data) {
+            return newChar;
+          }
 
           // 1. Проклятие клана — всегда
-          newMeta.clanBane = data.bane;
+          newMeta.clanBane = t(data.bane);
           newChar = { ...newChar, meta: newMeta };
 
           // 2. Зверь и Ярость — только если пусто или авто от прошлого клана
-          if (!c.beast.clanBeast || c.beast.clanBeast === oldData?.beast) {
-            newChar.beast = { ...newChar.beast, clanBeast: data.beast };
+          const oldBeastText = oldData ? (oldData.beast ? t(oldData.beast) : '') : '';
+          const oldRageText = oldData ? (oldData.rage ? t(oldData.rage) : '') : '';
+          if (!c.beast.clanBeast || c.beast.clanBeast === oldBeastText) {
+            newChar.beast = { ...newChar.beast, clanBeast: data.beast ? t(data.beast) : '' };
           }
-          if (!c.beast.rage || c.beast.rage === oldData?.rage) {
-            newChar.beast = { ...newChar.beast, rage: data.rage };
+          if (!c.beast.rage || c.beast.rage === oldRageText) {
+            newChar.beast = { ...newChar.beast, rage: data.rage ? t(data.rage) : '' };
           }
 
           // 3. Дисциплины — заменяем ТОЛЬКО если пользователь ничего не трогал
@@ -202,9 +231,10 @@ export const useCharacterStore = create<CharacterStore>()(
 
         // === АВТОЗАПОЛНЕНИЕ: ВИД → ПОКОЛЕНИЕ + МОДИФИКАТОР ===
         if (field === 'type') {
-          const defaultGen = VAMPIRE_TYPE_TO_GENERATION[value];
+          const normalizedType = normalizeId(value);
+          const defaultGen = VAMPIRE_TYPE_TO_GENERATION[normalizedType];
           if (defaultGen) {
-            const prevDefaultGen = VAMPIRE_TYPE_TO_GENERATION[c.meta.type];
+            const prevDefaultGen = VAMPIRE_TYPE_TO_GENERATION[normalizeId(c.meta.type || '')];
             const isUntouched = !c.meta.generation || c.meta.generation === prevDefaultGen;
             if (isUntouched) {
               newMeta.generation = defaultGen;
@@ -216,8 +246,9 @@ export const useCharacterStore = create<CharacterStore>()(
 
         // === АВТОЗАПОЛНЕНИЕ: СИР → ДИСЦИПЛИНА ===
         if (field === 'sireType') {
-          const newDisc = SIRE_TYPE_TO_DISCIPLINE[value];
-          const oldAutoDisc = SIRE_TYPE_TO_DISCIPLINE[c.meta.sireType];
+          const normalizedSireType = normalizeId(value);
+          const newDisc = SIRE_TYPE_TO_DISCIPLINE[normalizedSireType];
+          const oldAutoDisc = SIRE_TYPE_TO_DISCIPLINE[normalizeId(c.meta.sireType || '')];
           const isUntouched = !c.meta.sireDiscipline || c.meta.sireDiscipline === oldAutoDisc;
           if (newDisc && isUntouched) {
             newMeta.sireDiscipline = newDisc;
@@ -352,8 +383,10 @@ export const useCharacterStore = create<CharacterStore>()(
 
         let newSkills = { ...c.skills };
 
-        if (oldPath && oldPath !== pathName) {
-          const oldPathSkills = MORTAL_LIFE_PATHS[oldPath] || VAMPIRE_LIFE_PATHS[oldPath] || [];
+        const normalizedOldPath = normalizeId(oldPath || '');
+        const normalizedNewPath = normalizeId(pathName);
+        if (normalizedOldPath && normalizedOldPath !== normalizedNewPath) {
+          const oldPathSkills = MORTAL_LIFE_PATHS[normalizedOldPath] || VAMPIRE_LIFE_PATHS[normalizedOldPath] || [];
           oldPathSkills.forEach(skillName => {
             if (newSkills[skillName]) {
               newSkills[skillName] = { ...newSkills[skillName], dots: Math.max(0, newSkills[skillName].dots - 1) };
@@ -361,9 +394,9 @@ export const useCharacterStore = create<CharacterStore>()(
           });
         }
 
-        lp[index] = pathName;
-        oldApplied[index] = pathName;
-        const pathSkills = MORTAL_LIFE_PATHS[pathName] || VAMPIRE_LIFE_PATHS[pathName] || [];
+        lp[index] = normalizedNewPath;
+        oldApplied[index] = normalizedNewPath;
+        const pathSkills = MORTAL_LIFE_PATHS[normalizedNewPath] || VAMPIRE_LIFE_PATHS[normalizedNewPath] || [];
         if (pathSkills.length > 0) {
           pathSkills.forEach(skillName => {
             if (newSkills[skillName]) {
@@ -430,9 +463,9 @@ export const useCharacterStore = create<CharacterStore>()(
         } else if (state && !state.characters.find(c => c.id === state.activeId)) {
           state.activeId = state.characters[0].id;
         }
-        // Миграция: нормализуем disciplines во всех персонажах
+        // Миграция: нормализуем все поля во всех персонажах
         if (state?.characters) {
-          state.characters = state.characters.map(c => ({ ...c, disciplines: (c.disciplines || []).map(normalizeDiscipline) }));
+          state.characters = state.characters.map(normalizeCharacter);
         }
       }
     }

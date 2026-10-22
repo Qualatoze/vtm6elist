@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&family=Noto+Sans+SC:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -132,4 +132,22 @@ textarea:focus-visible,
 button:focus-visible {
   outline: 2px solid var(--accent, #000);
   outline-offset: 1px;
+}
+
+/* ===== HEADER ICON BUTTONS ===== */
+.icon-btn {
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 6px;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--accent);
 }

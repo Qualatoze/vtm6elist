@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useCharacterStore } from '../store';
+import { t } from '../i18n';
+import { CLANS_LIST } from '../types';
 import { ChevronDown, Plus, Trash2, Users } from 'lucide-react';
 
 export const CharacterSelector = () => {
@@ -20,10 +22,10 @@ export const CharacterSelector = () => {
 
   return (
     <div ref={wrapperRef} className="relative">
-      <button onClick={() => setOpen(!open)} className="flex items-center gap-2 rounded px-2 py-1 text-sm cursor-pointer" style={{ background: 'var(--panel)', border: `1px solid var(--border)`, color: 'var(--text)' }}>
-        <Users size={14} style={{ color: 'var(--accent)' }} />
-        <span className="truncate max-w-[100px] md:max-w-[150px]" style={{ color: 'var(--text)' }}>{active?.meta.name || 'Безымянный'}</span>
-        <ChevronDown size={12} style={{ color: 'var(--muted)', transform: open ? 'rotate(180deg)' : 'none' }} />
+      <button onClick={() => setOpen(!open)} className="flex items-center gap-2 rounded px-2 py-1 text-sm cursor-pointer" style={{ background: 'var(--panel)', border: `1px solid var(--border)`, color: 'var(--text)', width: '180px', minWidth: '180px', flexShrink: 0 }}>
+        <Users size={14} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+        <span className="truncate" style={{ color: 'var(--text)', flex: 1, textAlign: 'left' }}>{active?.meta.name || t('common.nameless')}</span>
+        <ChevronDown size={12} style={{ color: 'var(--muted)', transform: open ? 'rotate(180deg)' : 'none', flexShrink: 0 }} />
       </button>
 
       {open && (
@@ -35,18 +37,22 @@ export const CharacterSelector = () => {
             {characters.map(c => (
               <div key={c.id} className={`flex items-center px-2 py-1.5 cursor-pointer`} style={{ background: c.id === activeId ? 'var(--border)' : 'transparent', borderLeft: c.id === activeId ? `3px solid var(--accent)` : 'none' }}>
                 <button className="flex-1 text-left text-sm truncate" onClick={() => { switchCharacter(c.id); setOpen(false); }} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', padding: 0 }}>
-                  {c.meta.name || 'Безымянный'}
-                  {c.meta.clan && <span className="ml-1 text-xs" style={{ color: 'var(--muted)' }}>({c.meta.clan})</span>}
+                  {c.meta.name || t('common.nameless')}
+                  {c.meta.clan && (
+                    CLANS_LIST.some(cl => cl.id === c.meta.clan)
+                      ? <span className="ml-1 text-xs" style={{ color: 'var(--muted)' }}>({t('clans.' + c.meta.clan)})</span>
+                      : <span className="ml-1 text-xs" style={{ color: 'var(--muted)' }}>({c.meta.clan})</span>
+                  )}
                 </button>
                 {characters.length > 1 && (
-                  <button onClick={(e) => { e.stopPropagation(); if (confirm(`Удалить "${c.meta.name || 'Безымянный'}"?`)) removeCharacter(c.id); }} className="ml-1" style={{ color: '#e74c3c', background: 'none', border: 'none', cursor: 'pointer' }}>
+                  <button onClick={(e) => { e.stopPropagation(); if (confirm(t('placeholders.delete_character'))) removeCharacter(c.id); }} className="ml-1" style={{ color: '#e74c3c', background: 'none', border: 'none', cursor: 'pointer' }}>
                     <Trash2 size={12} />
                   </button>
                 )}
               </div>
             ))}
             <button onClick={() => { newCharacter(); setOpen(false); }} className="w-full flex items-center gap-1 px-2 py-1.5 text-sm cursor-pointer" style={{ background: 'none', border: `1px solid var(--border)`, color: '#4ade80' }}>
-              <Plus size={12} /> Новый персонаж
+              <Plus size={12} /> {t('common.new_character')}
             </button>
           </div>
         </>
