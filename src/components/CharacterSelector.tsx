@@ -29,7 +29,7 @@ export const CharacterSelector = () => {
       {open && (
         <>
           {/* Invisible fixed overlay to catch clicks outside */}
-          <div className="fixed inset-0 z-[60]" onClick={() => setOpen(false)} style={{ background: 'transparent', pointerEvents: 'all' }} />
+          <div className="fixed inset-0 z-[60] no-print" onClick={() => setOpen(false)} style={{ background: 'transparent', pointerEvents: 'all' }} />
           {/* Dropdown positioned relative to wrapper */}
           <div className="absolute top-full left-0 mt-1 min-w-[200px] max-h-80 overflow-y-auto rounded shadow-xl z-[70]" style={{ background: 'var(--panel)', border: `1px solid var(--border)`, color: 'var(--text)' }}>
             {characters.map(c => (

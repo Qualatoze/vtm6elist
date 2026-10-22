@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useCharacterStore } from '../store';
-import { SKILLS_LIST, NOSTALGIA_DECADES, VAMPIRE_TYPES, CLANS_LIST } from '../types';
+import { SKILLS_LIST, NOSTALGIA_DECADES, VAMPIRE_TYPES, CLANS_LIST, SIRE_TYPES_LIST } from '../types';
 import { DotRating } from './DotRating';
 import { HumanityTracker } from './HumanityTracker';
 
@@ -17,6 +17,7 @@ const ATTR_LABELS: Record<string, string> = {
 };
 
 const GENERATION_VALUES = Array.from({ length: 16 }, (_, i) => i + 2); // 2..17
+const GENERATION_OPTIONS = GENERATION_VALUES.map(v => `${v}-е`);
 
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -85,17 +86,18 @@ const HeaderRow = ({
   </div>
 );
 
-const PowerDisplay = ({ label, current, max, onChange, size = 10, totalSquares = 20 }: { label: string; current: number; max: number; onChange: (v: number) => void; size?: number; totalSquares?: number }) => {
+const PowerDisplay = ({ label, current, max, onChange, size = 10 }: { label: string; current: number; max: number; onChange: (v: number) => void; size?: number }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{ fontWeight: 'bold', fontSize: '13px', marginBottom: '4px', fontFamily: "'Georgia', serif" }}>{label}</div>
       <div style={{ display: 'flex', gap: '2px' }}>
-        {Array.from({ length: totalSquares }).map((_, i) => {
+        {Array.from({ length: max }).map((_, i) => {
           const pos = i + 1;
           const isFilled = pos <= current;
           const isLast = pos === current && current > 0;
+          const isMax = pos === max;
           return (
-            <div key={i} style={{ position: 'relative', marginLeft: pos === Math.floor(totalSquares / 2) + 1 ? 8 : 0 }}>
+            <div key={i} style={{ position: 'relative', marginLeft: pos === Math.floor(max / 2) + 1 ? 8 : 0 }}>
               {isLast && (
                 <span style={{
                   position: 'absolute', top: '-18px', left: '50%', transform: 'translateX(-50%)',
@@ -105,11 +107,11 @@ const PowerDisplay = ({ label, current, max, onChange, size = 10, totalSquares =
                 </span>
               )}
               <button
-                onClick={() => onChange(pos)}
+                onClick={() => onChange(pos === current ? 0 : pos)}
                 style={{
                   width: `${size}px`, height: `${size}px`,
                   background: isFilled ? 'var(--dot-color)' : 'transparent',
-                  border: `1px solid ${isFilled ? 'var(--dot-color)' : 'var(--border)'}`,
+                  border: `1px solid ${isMax ? 'var(--accent)' : isFilled ? 'var(--dot-color)' : 'var(--border)'}`,
                   borderRadius: '50%',
                   cursor: 'pointer',
                   padding: 0,
@@ -119,17 +121,7 @@ const PowerDisplay = ({ label, current, max, onChange, size = 10, totalSquares =
           );
         })}
       </div>
-      <div style={{ display: 'flex', gap: '2px', marginTop: '3px' }}>
-        {Array.from({ length: totalSquares }).map((_, i) => (
-          <span key={i} style={{
-            width: `${size}px`, height: `${size}px`,
-            background: 'transparent',
-            border: `1px solid var(--border)`,
-            borderRadius: '50%',
-            display: 'inline-block',
-          }} />
-        ))}
-      </div>
+      <span style={{ fontSize: '9px', color: 'var(--muted)', marginTop: '2px' }}>{current}/{max}</span>
     </div>
   );
 };
@@ -188,13 +180,19 @@ export const SheetPage1 = () => {
           
           <HeaderRow label="Проклятие клана" value={character.meta.clanBane} onChange={(v) => updateMeta('clanBane', v)} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <HeaderRow label="Поколение" value={character.meta.generation} onChange={(v) => updateMeta('generation', v)} isDropdown options={GENERATION_VALUES.map(v => `${v}-е`)} />
+            <HeaderRow label="Поколение" value={character.meta.generation} onChange={(v) => updateMeta('generation', v)} isDropdown options={GENERATION_OPTIONS} />
             <HeaderRow label="Модификатор" value={character.meta.modifier} onChange={(v) => updateMeta('modifier', v)} />
           </div>
           <HeaderRow label="Архетип" value={character.meta.archetype} onChange={(v) => updateMeta('archetype', v)} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <HeaderRow label="Сир" value={character.meta.sire} onChange={(v) => updateMeta('sire', v)} />
-            <HeaderRow label="Вид сира" value={character.meta.sireType} onChange={(v) => updateMeta('sireType', v)} />
+            <HeaderRow
+              label="Вид сира"
+              value={character.meta.sireType}
+              onChange={(v) => updateMeta('sireType', v)}
+              isDropdown
+              options={SIRE_TYPES_LIST}
+            />
           </div>
           <HeaderRow label="Дисциплина от сира" value={character.meta.sireDiscipline} onChange={(v) => updateMeta('sireDiscipline', v)} />
         </div>
@@ -245,8 +243,8 @@ export const SheetPage1 = () => {
 
       {/* ===== 3. ВИТЭ И ВОЛЯ ===== */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '10px' : '20px', marginBottom: '15px', borderBottom: `2px solid var(--border)`, paddingBottom: '15px', alignItems: 'center' }}>
-        <PowerDisplay label="ВИТЭ" current={character.vitae.current} max={character.vitae.max} onChange={(v) => updateVitae(v)} size={18} />
-        <PowerDisplay label="ВОЛЯ" current={character.willpower.current} max={character.willpower.max} onChange={(v) => updateWillpower(v)} totalSquares={10} size={16} />
+        <PowerDisplay label="ВИТЭ" current={character.vitae.current} max={character.vitae.max} onChange={(v) => updateVitae(v)} size={14} />
+        <PowerDisplay label="ВОЛЯ" current={character.willpower.current} max={character.willpower.max} onChange={(v) => updateWillpower(v)} size={13} />
       </div>
 
       {/* ===== 4. УСКОРЕНИЕ ===== */}
@@ -264,10 +262,10 @@ export const SheetPage1 = () => {
       <div style={{ marginBottom: '15px', border: '1px solid var(--border)', padding: '4px' }}>
         <div style={sectionHeaderStyle}>Навыки</div>
         {SKILLS_LIST.map(skill => (
-          <div key={skill} style={{ display: 'grid', gridTemplateColumns: isMobile ? '80px 60px 1fr 1fr 1fr' : '160px 110px 1fr 1fr 1fr', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '2px', marginBottom: '2px' }}>
+          <div key={skill} style={{ display: 'grid', gridTemplateColumns: isMobile ? '80px 60px 1fr 1fr 1fr' : '160px 110px 1fr 1fr 1fr', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '0px', marginBottom: '0px' }}>
             <div style={{ fontSize: '11px', fontFamily: "'Georgia', serif" }}>{skill}</div>
             <div>
-              <DotRating total={5} value={character.skills[skill]?.dots || 0} onChange={(v) => updateSkill(skill, v)} />
+              <DotRating total={5} size={12} value={character.skills[skill]?.dots || 0} onChange={(v) => updateSkill(skill, v)} />
             </div>
             {[0, 1, 2].map((idx) => (
               <input
@@ -296,7 +294,7 @@ export const SheetPage1 = () => {
       <div style={{ display: 'flex', gap: '16px', marginBottom: '15px' }}>
         <div style={{ flex: 3, minWidth: 0 }}>
           <div style={{ ...sectionHeaderStyle, textAlign: 'center' }}>Ресурсы</div>
-          {Array.from({ length: 10 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '3px' }}>
               <input
                 type="text"

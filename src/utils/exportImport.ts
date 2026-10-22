@@ -46,33 +46,55 @@ export const importJSONFile = (
 
 const toggleNoPrint = (hide: boolean) => {
   const elements = document.querySelectorAll<HTMLElement>('.no-print');
-  elements.forEach(el => { el.style.display = hide ? 'none' : ''; });
+  elements.forEach(el => {
+    if (hide) {
+      el.dataset.prevDisplay = el.style.display || '';
+      el.style.display = 'none';
+    } else {
+      el.style.display = el.dataset.prevDisplay || '';
+      delete el.dataset.prevDisplay;
+    }
+  });
 };
 
-const renderPageToCanvas = async (elementId: string, width: number) => {
+// A4 при 96 DPI — сохраняем пропорции при рендере в canvas
+const A4_WIDTH_PX = 794;
+const A4_HEIGHT_PX = 1123;
+
+const getThemeBg = (): string => {
+  if (typeof window === 'undefined') return '#ffffff';
+  const v = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  return v || '#ffffff';
+};
+
+const renderPageToCanvas = async (elementId: string) => {
   const original = document.getElementById(elementId);
   if (!original) return null;
+
+  const bgColor = getThemeBg();
 
   const container = document.createElement('div');
   container.style.position = 'absolute';
   container.style.left = '-9999px';
   container.style.top = '0';
-  container.style.width = `${width}px`;
-  container.style.backgroundColor = '#1a1a1a';
+  container.style.width = `${A4_WIDTH_PX}px`;
+  container.style.backgroundColor = bgColor;
 
   const clone = original.cloneNode(true) as HTMLElement;
   clone.style.display = 'block';
-  clone.style.width = `${width}px`;
+  clone.style.width = `${A4_WIDTH_PX}px`;
+  clone.style.minHeight = `${A4_HEIGHT_PX}px`;
+  clone.style.margin = '0';
   container.appendChild(clone);
   document.body.appendChild(container);
 
   try {
     const canvas = await html2canvas(container, {
       scale: 2,
-      backgroundColor: '#1a1a1a',
+      backgroundColor: bgColor,
       useCORS: true,
       logging: false,
-      windowWidth: width,
+      windowWidth: A4_WIDTH_PX,
       onclone: (doc) => {
         (doc.querySelectorAll('input, textarea') as NodeListOf<HTMLElement>).forEach((el) => {
           el.style.background = 'var(--panel)';
@@ -87,33 +109,28 @@ const renderPageToCanvas = async (elementId: string, width: number) => {
   }
 };
 
+const addPageWithFit = (pdf: jsPDF, canvas: HTMLCanvasElement) => {
+  const pdfW = pdf.internal.pageSize.getWidth();
+  const pdfH = pdf.internal.pageSize.getHeight();
+  const img = canvas.toDataURL('image/png');
+  const scale = Math.min(pdfW / canvas.width, pdfH / canvas.height);
+  const w = canvas.width * scale;
+  const h = canvas.height * scale;
+  pdf.addImage(img, 'PNG', 0, 0, w, h);
+};
+
 export const exportAllPDFs = async (charName: string) => {
   toggleNoPrint(true);
   try {
-    const width = 1024;
-    const page1 = await renderPageToCanvas('character-sheet', width);
-    const page2 = await renderPageToCanvas('character-sheet-2', width);
+    const page1 = await renderPageToCanvas('character-sheet');
+    const page2 = await renderPageToCanvas('character-sheet-2');
 
     if (!page1 && !page2) throw new Error('Не удалось захватить страницы');
 
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: 'a4', hotfixes: ['px_scaling'] });
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
 
-    if (page1) {
-      const img1 = page1.toDataURL('image/png');
-      const ratio = pdfWidth / page1.width;
-      const imgHeight = page1.height * ratio;
-      pdf.addImage(img1, 'PNG', 0, 0, pdfWidth, Math.min(imgHeight, pdfHeight));
-    }
-
-    if (page2) {
-      pdf.addPage();
-      const img2 = page2.toDataURL('image/png');
-      const ratio = pdfWidth / page2.width;
-      const imgHeight = page2.height * ratio;
-      pdf.addImage(img2, 'PNG', 0, 0, pdfWidth, Math.min(imgHeight, pdfHeight));
-    }
+    if (page1) addPageWithFit(pdf, page1);
+    if (page2) { pdf.addPage(); addPageWithFit(pdf, page2); }
 
     pdf.save(`VTM6E_${charName || 'Character'}_Full.pdf`);
   } catch (error) {
