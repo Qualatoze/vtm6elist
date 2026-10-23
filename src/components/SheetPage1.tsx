@@ -357,7 +357,7 @@ export const SheetPage1 = () => {
             placeholder={t('placeholders.items')}
             style={{
               flex: 1,
-              background: 'var(--panel)',
+              background: 'var(--input-bg)',
               border: `1px solid var(--border)`,
               outline: 'none',
               padding: '8px',

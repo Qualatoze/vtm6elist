@@ -182,8 +182,9 @@ export const exportAllPDFs = async (charName: string) => {
 
     const addPage = (canvas: HTMLCanvasElement) => {
       if (!canvas || canvas.width === 0 || canvas.height === 0) return;
-      const img = canvas.toDataURL('image/png');
-      pdf.addImage(img, 'PNG', 0, 0, pdfW, pdfH);
+      // ИСПОЛЬЗУЕМ JPEG ВМЕСТО PNG ДЛЯ УМЕНЬШЕНИЯ ВЕСА
+      const img = canvas.toDataURL('image/jpeg', 0.9);
+      pdf.addImage(img, 'JPEG', 0, 0, pdfW, pdfH);
     };
 
     if (page1) addPage(page1);

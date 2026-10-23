@@ -41,7 +41,7 @@ const sheetStyle: React.CSSProperties = {
 const MAX_DISCIPLINES = 16;
 
 export const SheetPage2 = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const character = useCharacterStore(s => s.getActive());
   const { updateField, updateNested, addDiscipline, updateDiscipline, updateDisciplinePower, removeDiscipline, updateLifePath, applyLifePath } = useCharacterStore();
   const isMobile = useIsMobile();
@@ -169,10 +169,10 @@ export const SheetPage2 = () => {
       )}
 
       {/* BOTTOM 50/50 FLEX */}
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px', width: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px', width: '100%', flex: 1, minHeight: 0 }}>
         {/* LEFT */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
-          <div>
+          <div style={{ flexShrink: 0 }}>
             <h3 style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>{t('ui.life_paths')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               {[0, 1, 2, 3].map((row) => (
@@ -187,7 +187,7 @@ export const SheetPage2 = () => {
                       if (matched && (MORTAL_LIFE_PATHS[matched] || VAMPIRE_LIFE_PATHS[matched])) applyLifePath(row * 2, matched);
                       else updateLifePath(row * 2, v);
                     }}
-                    style={{ width: '90px', flexShrink: 0, background: 'transparent', border: '1px solid var(--border)', height: '20px', fontSize: '10px', outline: 'none', padding: '0 4px', boxSizing: 'border-box' }}
+                    style={{ width: '90px', flexShrink: 0, background: 'var(--input-bg)', border: '1px solid var(--border)', height: '20px', fontSize: '10px', outline: 'none', padding: '0 4px', boxSizing: 'border-box' }}
                   />
                   <input
                     type="text"
@@ -199,7 +199,7 @@ export const SheetPage2 = () => {
                       if (matched && (MORTAL_LIFE_PATHS[matched] || VAMPIRE_LIFE_PATHS[matched])) applyLifePath(row * 2 + 1, matched);
                       else updateLifePath(row * 2 + 1, v);
                     }}
-                    style={{ flex: 1, minWidth: 0, background: 'transparent', border: '1px solid var(--border)', height: '20px', fontSize: '10px', outline: 'none', padding: '0 4px', boxSizing: 'border-box' }}
+                    style={{ flex: 1, minWidth: 0, background: 'var(--input-bg)', border: '1px solid var(--border)', height: '20px', fontSize: '10px', outline: 'none', padding: '0 4px', boxSizing: 'border-box' }}
                   />
                 </div>
               ))}
@@ -209,37 +209,37 @@ export const SheetPage2 = () => {
             </datalist>
           </div>
 
-          <div>
-            <h3 style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>{t('ui.clan_traits')}</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+            <h3 style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', flexShrink: 0 }}>{t('ui.clan_traits')}</h3>
             <textarea
               value={character.clanTraits}
               onChange={(e) => updateField('clanTraits', e.target.value)}
-              style={{ width: '100%', height: '70px', background: 'transparent', border: '1px solid var(--border)', padding: '4px', resize: 'none', fontSize: '10px', outline: 'none', boxSizing: 'border-box' }}
+              style={{ flex: 1, width: '100%', background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '4px', resize: 'none', fontSize: '10px', outline: 'none', boxSizing: 'border-box', overflow: 'hidden' }}
             />
           </div>
 
-          <div>
-            <h3 style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>{t('ui.merits')}</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+            <h3 style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', flexShrink: 0 }}>{t('ui.merits')}</h3>
             <textarea
               value={character.merits}
               onChange={(e) => updateField('merits', e.target.value)}
-              style={{ width: '100%', height: '60px', background: 'transparent', border: '1px solid var(--border)', padding: '4px', resize: 'none', fontSize: '10px', outline: 'none', boxSizing: 'border-box' }}
+              style={{ flex: 1, width: '100%', background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '4px', resize: 'none', fontSize: '10px', outline: 'none', boxSizing: 'border-box', overflow: 'hidden' }}
             />
           </div>
 
-          <div>
-            <h3 style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>{t('ui.flaws')}</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+            <h3 style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', flexShrink: 0 }}>{t('ui.flaws')}</h3>
             <textarea
               value={character.flaws}
               onChange={(e) => updateField('flaws', e.target.value)}
-              style={{ width: '100%', height: '60px', background: 'transparent', border: '1px solid var(--border)', padding: '4px', resize: 'none', fontSize: '10px', outline: 'none', boxSizing: 'border-box' }}
+              style={{ flex: 1, width: '100%', background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '4px', resize: 'none', fontSize: '10px', outline: 'none', boxSizing: 'border-box', overflow: 'hidden' }}
             />
           </div>
         </div>
 
         {/* RIGHT */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
-          <div>
+          <div style={{ flexShrink: 0 }}>
             <h3 style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>{t('ui.nature')}</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
               <span style={{ fontSize: '10px', flexShrink: 0 }}>{t('nature.label')}:</span>
@@ -252,7 +252,7 @@ export const SheetPage2 = () => {
                   const matched = NATURES_LIST.find(n => t(n.label) === v || n.id === v);
                   updateNested('nature', { indulgence: matched ? matched.id : v });
                 }}
-                style={{ flex: 1, minWidth: 0, background: 'transparent', border: '1px solid var(--border)', height: '20px', padding: '0 4px', fontSize: '10px', outline: 'none', boxSizing: 'border-box' }}
+                style={{ flex: 1, minWidth: 0, background: 'var(--input-bg)', border: '1px solid var(--border)', height: '20px', padding: '0 4px', fontSize: '10px', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
             <datalist id="natures-list">
@@ -264,12 +264,12 @@ export const SheetPage2 = () => {
                 type="text"
                 value={character.nature.flash}
                 onChange={(e) => updateNested('nature', { flash: e.target.value })}
-                style={{ flex: 1, minWidth: 0, background: 'transparent', border: '1px solid var(--border)', height: '20px', padding: '0 4px', fontSize: '10px', outline: 'none', boxSizing: 'border-box' }}
+                style={{ flex: 1, minWidth: 0, background: 'var(--input-bg)', border: '1px solid var(--border)', height: '20px', padding: '0 4px', fontSize: '10px', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
           </div>
 
-          <div>
+          <div style={{ flexShrink: 0 }}>
             <h3 style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>{t('ui.beast')}</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
               <span style={{ fontSize: '10px', flexShrink: 0 }}>{t('clan_beast.label')}:</span>
@@ -277,7 +277,7 @@ export const SheetPage2 = () => {
                 type="text"
                 value={character.beast.clanBeast}
                 onChange={(e) => updateNested('beast', { clanBeast: e.target.value })}
-                style={{ flex: 1, minWidth: 0, background: 'transparent', border: '1px solid var(--border)', height: '20px', padding: '0 4px', fontSize: '10px', outline: 'none', boxSizing: 'border-box' }}
+                style={{ flex: 1, minWidth: 0, background: 'var(--input-bg)', border: '1px solid var(--border)', height: '20px', padding: '0 4px', fontSize: '10px', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -286,17 +286,17 @@ export const SheetPage2 = () => {
                 type="text"
                 value={character.beast.rage}
                 onChange={(e) => updateNested('beast', { rage: e.target.value })}
-                style={{ flex: 1, minWidth: 0, background: 'transparent', border: '1px solid var(--border)', height: '20px', padding: '0 4px', fontSize: '10px', outline: 'none', boxSizing: 'border-box' }}
+                style={{ flex: 1, minWidth: 0, background: 'var(--input-bg)', border: '1px solid var(--border)', height: '20px', padding: '0 4px', fontSize: '10px', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
           </div>
 
-          <div>
-            <h3 style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>{t('ui.notes')}</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+            <h3 style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', flexShrink: 0 }}>{t('ui.notes')}</h3>
             <textarea
               value={character.notes || ''}
               onChange={(e) => updateField('notes', e.target.value)}
-              style={{ width: '100%', height: '160px', background: 'transparent', border: '1px solid var(--border)', padding: '4px', resize: 'none', fontSize: '10px', outline: 'none', boxSizing: 'border-box' }}
+              style={{ flex: 1, width: '100%', background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '4px', resize: 'none', fontSize: '10px', outline: 'none', boxSizing: 'border-box', overflow: 'hidden' }}
             />
           </div>
         </div>

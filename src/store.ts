@@ -110,10 +110,10 @@ const normalizeCharacter = (c: CharacterSheet): CharacterSheet => ({
     nostalgia: normalizeId(c.meta.nostalgia || ''),
     clanBane: wasI18nKey(c.meta.clanBane) ? t(c.meta.clanBane) : c.meta.clanBane,
   } : c.meta,
-  beast: c.beast ? {
-    clanBeast: wasI18nKey(c.beast.clanBeast) ? t(c.beast.clanBeast) : (c.beast.clanBeast || ''),
-    rage: wasI18nKey(c.beast.rage) ? t(c.beast.rage) : (c.beast?.rage || ''),
-  } : c.beast,
+  beast: {
+    clanBeast: c.beast?.clanBeast ? (wasI18nKey(c.beast.clanBeast) ? t(c.beast.clanBeast) : c.beast.clanBeast) : '',
+    rage: c.beast?.rage ? (wasI18nKey(c.beast.rage) ? t(c.beast.rage) : c.beast.rage) : '',
+  },
   nature: c.nature ? {
     ...c.nature,
     flash: wasI18nKey(c.nature.flash) ? t(c.nature.flash) : (c.nature.flash || ''),
@@ -164,58 +164,55 @@ export const useCharacterStore = create<CharacterStore>()(
         return { ...c, [field]: updated };
       })),
 
-      // === АВТОЗАПОЛНЕНИЕ: КЛАН / ПОКОЛЕНИЕ / ВИД / СИР ===
+      // === АВТОЗАПОЛНЕНИЕ: КЛАН -> БАН, ЗВЕРЬ, ЯРОСТЬ, ДИСЦИПЛИНЫ ===
       updateMeta: (field, value) => set(state => updateActive(state, c => {
         let newMeta = { ...c.meta, [field]: value };
         let newChar = { ...c, meta: newMeta };
 
+        // === АВТОЗАПОЛНЕНИЕ: КЛАН -> БАН, ЗВЕРЬ, ЯРОСТЬ, ДИСЦИПЛИНЫ ===
         if (field === 'clan') {
           const normalizedClan = normalizeId(value);
           const data = CLAN_DATA[normalizedClan];
+          
+          // Если выбран кастомный клан (не из списка) - прерываемся
+          if (!data) return newChar;
+
           const oldData = CLAN_DATA[normalizeId(c.meta.clan || '')];
-
-          // Кастомный клан: bane/beast/rage/disciplines не трогаем
-          if (!data) {
-            return newChar;
-          }
-
+          
           // 1. Проклятие клана — всегда
           newMeta.clanBane = t(data.bane);
           newChar = { ...newChar, meta: newMeta };
 
-          // 2. Зверь и Ярость — только если пусто или авто от прошлого клана
-          const oldBeastText = oldData ? (oldData.beast ? t(oldData.beast) : '') : '';
-          const oldRageText = oldData ? (oldData.rage ? t(oldData.rage) : '') : '';
-          if (!c.beast.clanBeast || c.beast.clanBeast === oldBeastText) {
-            newChar.beast = { ...newChar.beast, clanBeast: data.beast ? t(data.beast) : '' };
-          }
-          if (!c.beast.rage || c.beast.rage === oldRageText) {
-            newChar.beast = { ...newChar.beast, rage: data.rage ? t(data.rage) : '' };
-          }
+          // 2. Зверь и Ярость — меняем, только если пользователь их не трогал
+          const oldBeastText = oldData?.beast ? t(oldData.beast) : '';
+          const oldRageText = oldData?.rage ? t(oldData.rage) : '';
+          
+          const currentBeast = c.beast?.clanBeast || '';
+          const currentRage = c.beast?.rage || '';
 
-          // 3. Дисциплины — заменяем ТОЛЬКО если пользователь ничего не трогал
+          // Считаем поле "автоматическим", если оно пустое ИЛИ равно тому, что дал прошлый клан
+          const isBeastAuto = currentBeast === '' || currentBeast === oldBeastText || currentBeast === oldData?.beast;
+          const isRageAuto = currentRage === '' || currentRage === oldRageText || currentRage === oldData?.rage;
+
+          newChar.beast = {
+            ...c.beast,
+            clanBeast: isBeastAuto ? (data.beast ? t(data.beast) : '') : currentBeast,
+            rage: isRageAuto ? (data.rage ? t(data.rage) : '') : currentRage,
+          };
+
+          // 3. Дисциплины — заменяем, только если они пустые
           const cur = c.disciplines || [];
-          const oldClanNames: string[] = (oldData?.disciplines as string[]) || [];
-
           const hasPoints = cur.some((d: any) => (d?.dots || 0) > 0);
-
           const hasPowers = cur.some((d: any) => {
             if (Array.isArray(d?.powersList)) {
               return d.powersList.some((p: any) => p && String(p).trim());
             }
-            if (typeof d?.powers === 'string') return d.powers.trim().length > 0;
             return false;
           });
 
-          // Имя не совпадает с тем, что дал бы прошлый клан → пользователь переименовал
-          const hasCustomName = cur.some((d: any, i: number) => {
-            const autoName = oldClanNames[i] || '';
-            return d?.name && d.name !== autoName;
-          });
-
-          if (!hasPoints && !hasPowers && !hasCustomName) {
+          if (!hasPoints && !hasPowers) {
             newChar.disciplines = data.disciplines.map(name => ({
-              id: generateId(),
+              id: crypto.randomUUID(),
               name,
               dots: 0,
               powersList: ['', '', '', '', ''] as [string, string, string, string, string],
@@ -223,13 +220,13 @@ export const useCharacterStore = create<CharacterStore>()(
           }
         }
 
-        // === АВТОЗАПОЛНЕНИЕ: ПОКОЛЕНИЕ → МОДИФИКАТОР ===
+        // === АВТОЗАПОЛНЕНИЕ: ПОКОЛЕНИЕ -> МОДИФИКАТОР ===
         if (field === 'generation') {
           newMeta.modifier = GENERATION_TO_MODIFIER(value);
           newChar = { ...newChar, meta: newMeta };
         }
 
-        // === АВТОЗАПОЛНЕНИЕ: ВИД → ПОКОЛЕНИЕ + МОДИФИКАТОР ===
+        // === АВТОЗАПОЛНЕНИЕ: ВИД -> ПОКОЛЕНИЕ + МОДИФИКАТОР ===
         if (field === 'type') {
           const normalizedType = normalizeId(value);
           const defaultGen = VAMPIRE_TYPE_TO_GENERATION[normalizedType];
@@ -244,7 +241,7 @@ export const useCharacterStore = create<CharacterStore>()(
           }
         }
 
-        // === АВТОЗАПОЛНЕНИЕ: СИР → ДИСЦИПЛИНА ===
+        // === АВТОЗАПОЛНЕНИЕ: СИР -> ДИСЦИПЛИНА ===
         if (field === 'sireType') {
           const normalizedSireType = normalizeId(value);
           const newDisc = SIRE_TYPE_TO_DISCIPLINE[normalizedSireType];
