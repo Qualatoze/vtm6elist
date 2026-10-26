@@ -13,11 +13,22 @@ export const CharacterSelector = () => {
   // Lock body scroll when dropdown is open to prevent page shift
   useEffect(() => {
     if (open) {
+      const prevOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
       return () => {
-        document.body.style.overflow = '';
+        document.body.style.overflow = prevOverflow;
       };
     }
+  }, [open]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
   return (
@@ -35,7 +46,7 @@ export const CharacterSelector = () => {
           {/* Dropdown positioned relative to wrapper */}
           <div className="absolute top-full left-0 mt-1 min-w-[200px] max-h-80 overflow-y-auto rounded shadow-xl z-[70]" style={{ background: 'var(--panel)', border: `1px solid var(--border)`, color: 'var(--text)' }}>
             {characters.map(c => (
-              <div key={c.id} className={`flex items-center px-2 py-1.5 cursor-pointer`} style={{ background: c.id === activeId ? 'var(--border)' : 'transparent', borderLeft: c.id === activeId ? `3px solid var(--accent)` : 'none' }}>
+              <div key={c.id} className={`flex items-center px-2 py-1.5 cursor-pointer`} style={{ background: c.id === active?.id ? 'var(--headerBg)' : 'transparent', borderLeft: c.id === active?.id ? `3px solid var(--accent)` : 'none' }}>
                 <button className="flex-1 text-left text-sm truncate" onClick={() => { switchCharacter(c.id); setOpen(false); }} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', padding: 0 }}>
                   {c.meta.name || t('common.nameless')}
                   {c.meta.clan && (

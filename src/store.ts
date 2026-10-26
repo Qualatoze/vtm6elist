@@ -1,7 +1,9 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { CharacterSheet, SKILLS_LIST, CLAN_DATA, VAMPIRE_TYPES, NOSTALGIA_DECADES, GENERATION_TO_MODIFIER, VAMPIRE_TYPE_TO_GENERATION, SIRE_TYPE_TO_DISCIPLINE, NATURE_TO_FLASH, MORTAL_LIFE_PATHS, VAMPIRE_LIFE_PATHS, normalizeId } from './types';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { CharacterSheet, SKILLS_LIST, CLAN_DATA, VAMPIRE_TYPES, NOSTALGIA_DECADES, GENERATION_TO_MODIFIER, VAMPIRE_TYPE_TO_GENERATION, SIRE_TYPE_TO_DISCIPLINE, SIRE_TYPE_TO_DISCIPLINES, NATURE_TO_FLASH, MORTAL_LIFE_PATHS, VAMPIRE_LIFE_PATHS, normalizeId, DisciplineCard, PowerPage } from './types';
 import { t } from './i18n';
+import { DISCIPLINE_POWERS } from './data/disciplinePowers';
+import { debouncedStorage } from './utils/debouncedStorage';
 
 const generateId = () => crypto.randomUUID();
 
@@ -9,11 +11,14 @@ const initialSkills: Record<string, { dots: number; specifications: [string, str
   SKILLS_LIST.reduce((acc, skill) => ({ ...acc, [skill.id]: { dots: 0, specifications: ['', '', ''] } }), {});
 
 const normalizeDiscipline = (d: any) => ({
-  id: d.id || generateId(),
-  name: normalizeId(d.name || ''),
-  dots: Math.min(d.dots || 0, 5),
-  // Миграция со старого поля powers (строка) на powersList (массив из 5 строк)
-  powersList: Array.isArray(d.powersList) ? d.powersList : (d.powers ? d.powers.split('\n').slice(0, 5).padEnd(5, '') : ['', '', '', '', '']) as [string, string, string, string, string],
+  id: d?.id || generateId(),
+  name: normalizeId(d?.name || ''),
+  dots: Math.max(0, Math.min(d?.dots || 0, 5)),
+  powersList: Array.from({ length: 5 }, (_, i) => {
+    if (Array.isArray(d?.powersList)) return d.powersList[i] || '';
+    if (typeof d?.powers === 'string') return d.powers.split('\n')[i] || '';
+    return '';
+  }) as [string, string, string, string, string],
 });
 
 export const createEmptyCharacter = (): CharacterSheet => ({
@@ -34,13 +39,19 @@ export const createEmptyCharacter = (): CharacterSheet => ({
   skills: { ...initialSkills },
   resources: [{ name: t('resources.wealth'), dots: 0, squares: 0, notes: '' }],
   items: '',
-  disciplines: Array.from({ length: 6 }).map((_, i) => ({ id: generateId(), name: '', dots: 0, powersList: ['', '', '', '', ''] as [string, string, string, string, string] })),
-  lifePaths: [], clanTraits: '', merits: '', flaws: '', notes: '',
+  disciplines: [],
+  lifePaths: [], clanTraits: '', merits: '', flaws: '', notes: '', biography: '',
   nature: { indulgence: '', flash: '' },
   beast: { clanBeast: '', rage: '' },
   appliedLifePaths: [null, null, null, null, null, null, null, null],
-  diary: []
+  powerPages: [{ id: generateId(), layout: 4, fontSize: 11, cards: [] }]
 });
+
+export interface HistoryItem {
+  id: string;
+  timestamp: number;
+  changes: string[];
+}
 
 interface CharacterStore {
   characters: CharacterSheet[];
@@ -66,71 +77,236 @@ interface CharacterStore {
   removeDiscipline: (index: number) => void;
   updateLifePath: (index: number, value: string) => void;
   applyLifePath: (index: number, pathName: string) => void;
-  addDiaryEntry: (text: string) => void;
-  removeDiaryEntry: (id: string) => void;
   loadCharacter: (data: CharacterSheet) => void;
   loadCharacters: (data: CharacterSheet[]) => void;
   resetActiveCharacter: () => void;
   switchCharacter: (id: string) => void;
   newCharacter: () => void;
   removeCharacter: (id: string) => void;
+  addPowerPage: () => void;
+  removePowerPage: (pageId: string) => void;
+  updatePowerPageSettings: (pageId: string, settings: Partial<Pick<PowerPage, 'layout' | 'fontSize'>>) => void;
+  addDisciplineCard: (pageId: string, slotIndex?: number) => void;
+  updateDisciplineCard: (pageId: string, cardId: string, data: Partial<DisciplineCard>) => void;
+  removeDisciplineCard: (pageId: string, cardId: string) => void;
+  history: HistoryItem[];
+  pushHistory: (changes: string[]) => void;
+  clearHistory: () => void;
 }
 
 const updateActive = (state: CharacterStore, updater: (c: CharacterSheet) => CharacterSheet) => {
+  if (!state.characters.length) return state;
   const activeChar = state.characters.find(c => c.id === state.activeId) || state.characters[0];
   return {
     characters: state.characters.map(c => c.id === activeChar.id ? updater(c) : c)
   };
 };
+const wasI18nKey = (v?: string) => !!v && /^(clans|natures|powers|powers_meta)\.[a-z0-9_]+(\.[a-z0-9_]+)*$/.test(v);
 
-const wasI18nKey = (v?: string) => !!v && /^[a-z_]+(\.[a-z_]+)+$/.test(v);
-
-const normalizeCharacter = (c: CharacterSheet): CharacterSheet => ({
-  ...c,
-  id: c.id || generateId(),
-  disciplines: (c.disciplines || []).map(normalizeDiscipline),
-  skills: Object.fromEntries(
-    SKILLS_LIST.map(skill => {
-      const s = c.skills?.[skill.id];
-      return [skill.id, {
-        dots: s?.dots ?? 0,
-        specifications: [
-          s?.specifications?.[0] || '',
-          s?.specifications?.[1] || '',
-          s?.specifications?.[2] || '',
-        ] as [string, string, string],
-      }];
-    })
-  ),
-  meta: c.meta ? {
-    ...c.meta,
-    type: normalizeId(c.meta.type || ''),
-    clan: normalizeId(c.meta.clan || ''),
-    sireType: normalizeId(c.meta.sireType || ''),
-    nostalgia: normalizeId(c.meta.nostalgia || ''),
-    clanBane: wasI18nKey(c.meta.clanBane) ? t(c.meta.clanBane) : c.meta.clanBane,
-  } : c.meta,
-  beast: {
-    clanBeast: c.beast?.clanBeast ? (wasI18nKey(c.beast.clanBeast) ? t(c.beast.clanBeast) : c.beast.clanBeast) : '',
-    rage: c.beast?.rage ? (wasI18nKey(c.beast.rage) ? t(c.beast.rage) : c.beast.rage) : '',
-  },
-  nature: c.nature ? {
-    ...c.nature,
-    flash: wasI18nKey(c.nature.flash) ? t(c.nature.flash) : (c.nature.flash || ''),
-  } : c.nature,
-  lifePaths: c.lifePaths || [],
-  resources: c.resources || [],
-  appliedLifePaths: c.appliedLifePaths || [null, null, null, null, null, null, null, null],
-  vitae: {
-    max: c.vitae?.max ?? 11,
-    current: Math.min(c.vitae?.current ?? 0, c.vitae?.max ?? 11)
-  },
-  willpower: {
-    max: c.willpower?.max ?? 7,
-    current: Math.min(c.willpower?.current ?? 0, c.willpower?.max ?? 7)
+const migrateCard = (card: any): any => {
+  if (!card) return null;
+  const id = card.id || generateId();
+  // Already migrated — name is an i18n key
+  if (card.name && card.name.startsWith('powers.')) {
+    return { ...card, id };
   }
-});
+  // Try to find the power by disciplineId + powerId
+  const disc = DISCIPLINE_POWERS[card.disciplineId];
+  const power = disc?.powers.find((p: any) => p.id === card.powerId);
+  if (power) {
+    return {
+      ...card,
+      id,
+      name: power.name,
+      rank: power.rank,
+      type: power.type,
+      activation: power.activation,
+      trait: power.trait,
+      cost: power.cost,
+      difficulty: power.difficulty,
+      range: power.range,
+      duration: power.duration,
+      description: power.description,
+      upgrade: power.upgrade,
+    };
+  }
+  return { ...card, id };
+};
 
+
+const normalizeCharacter = (c: CharacterSheet): CharacterSheet => {
+  const clamp = (v: number | undefined, min: number, max: number) => Math.max(min, Math.min(v ?? 0, max));
+
+  const normalized: CharacterSheet = {
+    ...c,
+    id: c.id || generateId(),
+    biography: (c as any).biography || '',
+    bloodSurge: clamp(c.bloodSurge, 0, 5),
+    humanity: {
+      path: clamp((c.humanity as any)?.path, 1, 7),
+      beast: clamp((c.humanity as any)?.beast, 0, 5),
+      natureCounter: clamp((c.humanity as any)?.natureCounter, 0, 5),
+    },
+    disciplines: Array.isArray(c.disciplines)
+      ? c.disciplines.map(normalizeDiscipline)
+      : [],
+    skills: Object.fromEntries(
+      SKILLS_LIST.map(skill => {
+        const s = c.skills?.[skill.id];
+        return [skill.id, {
+          dots: clamp(s?.dots, 0, 5),
+          specifications: [
+            s?.specifications?.[0] || '',
+            s?.specifications?.[1] || '',
+            s?.specifications?.[2] || '',
+          ] as [string, string, string],
+        }];
+      })
+    ),
+    attributes: {
+      physical: {
+        strength: clamp(c.attributes?.physical?.strength, 0, 10),
+        dexterity: clamp(c.attributes?.physical?.dexterity, 0, 10),
+        stamina: clamp(c.attributes?.physical?.stamina, 0, 10),
+      },
+      social: {
+        charisma: clamp(c.attributes?.social?.charisma, 0, 10),
+        manipulation: clamp(c.attributes?.social?.manipulation, 0, 10),
+        composure: clamp(c.attributes?.social?.composure, 0, 10),
+      },
+      mental: {
+        intelligence: clamp(c.attributes?.mental?.intelligence, 0, 10),
+        wits: clamp(c.attributes?.mental?.wits, 0, 10),
+        resolve: clamp(c.attributes?.mental?.resolve, 0, 10),
+      },
+    },
+    meta: c.meta ? {
+      ...c.meta,
+      type: normalizeId(c.meta.type || ''),
+      clan: normalizeId(c.meta.clan || ''),
+      sireType: normalizeId(c.meta.sireType || ''),
+      nostalgia: normalizeId(c.meta.nostalgia || ''),
+      clanBane: wasI18nKey(c.meta.clanBane) ? t(c.meta.clanBane) : c.meta.clanBane,
+    } : c.meta,
+    beast: {
+      clanBeast: c.beast?.clanBeast ? (wasI18nKey(c.beast.clanBeast) ? t(c.beast.clanBeast) : c.beast.clanBeast) : '',
+      rage: c.beast?.rage ? (wasI18nKey(c.beast.rage) ? t(c.beast.rage) : c.beast.rage) : '',
+    },
+    nature: c.nature ? {
+      ...c.nature,
+      flash: wasI18nKey(c.nature.flash) ? t(c.nature.flash) : (c.nature.flash || ''),
+    } : c.nature,
+    lifePaths: c.lifePaths || [],
+    resources: c.resources || [],
+    appliedLifePaths: c.appliedLifePaths || [null, null, null, null, null, null, null, null],
+    powerPages: Array.isArray(c.powerPages) && c.powerPages.length > 0
+      ? c.powerPages.map(page => ({
+          id: page.id || generateId(),
+          layout: page.layout || 4,
+          fontSize: page.fontSize || 11,
+          cards: Array.isArray(page.cards)
+            ? page.cards.map(migrateCard)
+            : []
+        }))
+      : [{ id: generateId(), layout: 4, fontSize: 11, cards: [] }],
+    vitae: {
+      max: clamp(c.vitae?.max, 1, 20),
+      current: clamp(c.vitae?.current, 0, c.vitae?.max ?? 11),
+    },
+    willpower: {
+      max: clamp(c.willpower?.max, 1, 15),
+      current: clamp(c.willpower?.current, 0, c.willpower?.max ?? 7),
+    }
+  };
+  delete (normalized as any).diary;
+  return normalized;
+};
+
+const syncClanAndSireDisciplines = (
+  char: CharacterSheet,
+  oldClanId: string,
+  newClanId: string,
+  oldSireType: string,
+  newSireType: string
+) => {
+  let newChar = { ...char };
+
+  const oldClanDiscs = CLAN_DATA[oldClanId]?.disciplines || [];
+  const newClanDiscs = CLAN_DATA[newClanId]?.disciplines || [];
+  const oldSireDiscs = SIRE_TYPE_TO_DISCIPLINES[oldSireType] || [];
+  const newSireDiscs = SIRE_TYPE_TO_DISCIPLINES[newSireType] || [];
+
+  // Что нужно удалить (было в старом, нет в новом)
+  const toRemove = [...oldClanDiscs, ...oldSireDiscs].filter(d => !newClanDiscs.includes(d) && !newSireDiscs.includes(d));
+  
+  // Что нужно добавить (есть в новом, не было в старом)
+  const toAdd = [...newClanDiscs, ...newSireDiscs].filter(d => !oldClanDiscs.includes(d) && !oldSireDiscs.includes(d));
+
+  // 1. Удаляем старые дисциплины, если они пустые (юзер ничего не вложил)
+  newChar.disciplines = newChar.disciplines.filter(d => {
+    if (toRemove.includes(normalizeId(d.name))) {
+      const isEmpty = d.dots === 0 && (!d.powersList || d.powersList.every(p => !p));
+      if (isEmpty) return false; // удаляем
+    }
+    return true;
+  });
+
+  // 2. Удаляем карточки этих дисциплин
+  newChar.powerPages = newChar.powerPages.map(page => ({
+    ...page,
+    cards: page.cards.map(card => {
+      if (card && toRemove.includes(card.disciplineId)) {
+        const discStillExists = newChar.disciplines.some(d => normalizeId(d.name) === card.disciplineId);
+        if (!discStillExists) return null; // удаляем карточку
+      }
+      return card;
+    }).filter((c): c is DisciplineCard => c !== null)
+  }));
+
+  // 3. Добавляем новые дисциплины
+  toAdd.forEach(discId => {
+    const exists = newChar.disciplines.some(d => normalizeId(d.name) === discId);
+    if (!exists && newChar.disciplines.length < 16) {
+      newChar.disciplines.push({
+        id: crypto.randomUUID(),
+        name: discId,
+        dots: 0,
+        powersList: ['', '', '', '', '']
+      });
+    }
+  });
+
+  // 4. Добавляем новые карточки для них
+  if (newChar.powerPages.length === 0) {
+    newChar.powerPages.push({ id: crypto.randomUUID(), layout: 4, fontSize: 11, cards: [] });
+  }
+  let page = { ...newChar.powerPages[0] };
+  let cards = [...(page.cards || [])];
+
+  toAdd.forEach(discId => {
+    const cardExists = cards.some(c => c && c.disciplineId === discId);
+    if (!cardExists) {
+      let emptyIdx = cards.findIndex(c => !c);
+      if (emptyIdx === -1 && cards.length < 10) emptyIdx = cards.length;
+      if (emptyIdx !== -1) {
+        cards[emptyIdx] = {
+          id: crypto.randomUUID(),
+          disciplineId: discId,
+          powerId: '', name: '', rank: 1,
+          type: '', activation: '', trait: '', cost: '', difficulty: '', range: '', duration: '', description: '', upgrade: ''
+        };
+      }
+    }
+  });
+
+  page.cards = cards;
+  if (page.layout && cards.filter(Boolean).length > page.layout) {
+    page.layout = Math.min(10, Math.ceil(cards.filter(Boolean).length / 2) * 2) as 4 | 6 | 8 | 10;
+  }
+  newChar.powerPages[0] = page;
+
+  return newChar;
+};
 export const useCharacterStore = create<CharacterStore>()(
   persist(
     (set, get) => ({
@@ -169,55 +345,36 @@ export const useCharacterStore = create<CharacterStore>()(
         let newMeta = { ...c.meta, [field]: value };
         let newChar = { ...c, meta: newMeta };
 
-        // === АВТОЗАПОЛНЕНИЕ: КЛАН -> БАН, ЗВЕРЬ, ЯРОСТЬ, ДИСЦИПЛИНЫ ===
         if (field === 'clan') {
           const normalizedClan = normalizeId(value);
           const data = CLAN_DATA[normalizedClan];
           
-          // Если выбран кастомный клан (не из списка) - прерываемся
-          if (!data) return newChar;
+          if (data) {
+            const oldData = CLAN_DATA[normalizeId(c.meta.clan || '')];
+            newMeta.clanBane = t(data.bane);
+            newChar = { ...newChar, meta: newMeta };
 
-          const oldData = CLAN_DATA[normalizeId(c.meta.clan || '')];
-          
-          // 1. Проклятие клана — всегда
-          newMeta.clanBane = t(data.bane);
-          newChar = { ...newChar, meta: newMeta };
+            const oldBeastText = oldData?.beast ? t(oldData.beast) : '';
+            const oldRageText = oldData?.rage ? t(oldData.rage) : '';
+            const currentBeast = c.beast?.clanBeast || '';
+            const currentRage = c.beast?.rage || '';
+            const isBeastAuto = currentBeast === '' || currentBeast === oldBeastText || currentBeast === oldData?.beast;
+            const isRageAuto = currentRage === '' || currentRage === oldRageText || currentRage === oldData?.rage;
 
-          // 2. Зверь и Ярость — меняем, только если пользователь их не трогал
-          const oldBeastText = oldData?.beast ? t(oldData.beast) : '';
-          const oldRageText = oldData?.rage ? t(oldData.rage) : '';
-          
-          const currentBeast = c.beast?.clanBeast || '';
-          const currentRage = c.beast?.rage || '';
-
-          // Считаем поле "автоматическим", если оно пустое ИЛИ равно тому, что дал прошлый клан
-          const isBeastAuto = currentBeast === '' || currentBeast === oldBeastText || currentBeast === oldData?.beast;
-          const isRageAuto = currentRage === '' || currentRage === oldRageText || currentRage === oldData?.rage;
-
-          newChar.beast = {
-            ...c.beast,
-            clanBeast: isBeastAuto ? (data.beast ? t(data.beast) : '') : currentBeast,
-            rage: isRageAuto ? (data.rage ? t(data.rage) : '') : currentRage,
-          };
-
-          // 3. Дисциплины — заменяем, только если они пустые
-          const cur = c.disciplines || [];
-          const hasPoints = cur.some((d: any) => (d?.dots || 0) > 0);
-          const hasPowers = cur.some((d: any) => {
-            if (Array.isArray(d?.powersList)) {
-              return d.powersList.some((p: any) => p && String(p).trim());
-            }
-            return false;
-          });
-
-          if (!hasPoints && !hasPowers) {
-            newChar.disciplines = data.disciplines.map(name => ({
-              id: crypto.randomUUID(),
-              name,
-              dots: 0,
-              powersList: ['', '', '', '', ''] as [string, string, string, string, string],
-            }));
+            newChar.beast = {
+              ...c.beast,
+              clanBeast: isBeastAuto ? (data.beast ? t(data.beast) : '') : currentBeast,
+              rage: isRageAuto ? (data.rage ? t(data.rage) : '') : currentRage,
+            };
           }
+          // Передаём старый клан (c.meta.clan) и новый клан (normalizedClan)
+          newChar = syncClanAndSireDisciplines(
+            newChar,
+            normalizeId(c.meta.clan || ''),
+            normalizedClan,
+            normalizeId(c.meta.sireType || ''),
+            normalizeId(c.meta.sireType || '')
+          );
         }
 
         // === АВТОЗАПОЛНЕНИЕ: ПОКОЛЕНИЕ -> МОДИФИКАТОР ===
@@ -244,13 +401,23 @@ export const useCharacterStore = create<CharacterStore>()(
         // === АВТОЗАПОЛНЕНИЕ: СИР -> ДИСЦИПЛИНА ===
         if (field === 'sireType') {
           const normalizedSireType = normalizeId(value);
-          const newDisc = SIRE_TYPE_TO_DISCIPLINE[normalizedSireType];
-          const oldAutoDisc = SIRE_TYPE_TO_DISCIPLINE[normalizeId(c.meta.sireType || '')];
-          const isUntouched = !c.meta.sireDiscipline || c.meta.sireDiscipline === oldAutoDisc;
-          if (newDisc && isUntouched) {
-            newMeta.sireDiscipline = newDisc;
-            newChar = { ...newChar, meta: newMeta };
+          const newDiscs = SIRE_TYPE_TO_DISCIPLINES[normalizedSireType];
+          
+          if (newDiscs && newDiscs.length > 0) {
+            const oldAutoDisc = SIRE_TYPE_TO_DISCIPLINES[normalizeId(c.meta.sireType || '')]?.[0];
+            if (!c.meta.sireDiscipline || c.meta.sireDiscipline === oldAutoDisc) {
+              newMeta.sireDiscipline = newDiscs[0];
+              newChar = { ...newChar, meta: newMeta };
+            }
           }
+          // Передаём старый сир (c.meta.sireType) и новый сир (normalizedSireType)
+          newChar = syncClanAndSireDisciplines(
+            newChar,
+            normalizeId(c.meta.clan || ''),
+            normalizeId(c.meta.clan || ''),
+            normalizeId(c.meta.sireType || ''),
+            normalizedSireType
+          );
         }
 
         return newChar;
@@ -304,11 +471,11 @@ export const useCharacterStore = create<CharacterStore>()(
       })),
 
       updateVitae: (current) => set(state => updateActive(state, c => ({
-        ...c, vitae: { ...c.vitae, current: Math.max(0, Math.min(current, 20)) }
+        ...c, vitae: { ...c.vitae, current: Math.max(0, Math.min(current, c.vitae.max)) }
       }))),
       
       updateWillpower: (current) => set(state => updateActive(state, c => ({
-        ...c, willpower: { ...c.willpower, current: Math.max(0, Math.min(current, 20)) }
+        ...c, willpower: { ...c.willpower, current: Math.max(0, Math.min(current, c.willpower.max)) }
       }))),
 
       updateBloodSurge: (value) => set(state => updateActive(state, c => ({
@@ -364,10 +531,43 @@ export const useCharacterStore = create<CharacterStore>()(
       }))),
 
       updateLifePath: (index, value) => set(state => updateActive(state, c => {
+        const normalizedNew = normalizeId(value);
+        const isKnownPath = MORTAL_LIFE_PATHS[normalizedNew] || VAMPIRE_LIFE_PATHS[normalizedNew];
+
+        const oldApplied = [...(c.appliedLifePaths || [])];
+        while (oldApplied.length <= index) oldApplied.push(null);
+        const oldPath = oldApplied[index];
+
+        let newSkills = { ...c.skills };
+
+        // Снять бонусы старого пути
+        if (oldPath && oldPath !== normalizedNew) {
+          const oldSkills = MORTAL_LIFE_PATHS[oldPath] || VAMPIRE_LIFE_PATHS[oldPath] || [];
+          oldSkills.forEach(skillName => {
+            if (newSkills[skillName]) {
+              newSkills[skillName] = { ...newSkills[skillName], dots: Math.max(0, newSkills[skillName].dots - 1) };
+            }
+          });
+        }
+
+        // Начислить бонусы нового (если известный)
+        if (isKnownPath && oldPath !== normalizedNew) {
+          const pathSkills = MORTAL_LIFE_PATHS[normalizedNew] || VAMPIRE_LIFE_PATHS[normalizedNew] || [];
+          pathSkills.forEach(skillName => {
+            if (newSkills[skillName]) {
+              newSkills[skillName] = { ...newSkills[skillName], dots: Math.min(5, newSkills[skillName].dots + 1) };
+            }
+          });
+          oldApplied[index] = normalizedNew;
+        } else if (!isKnownPath) {
+          oldApplied[index] = null;
+        }
+
         const lp = [...(c.lifePaths || [])];
         while (lp.length <= index) lp.push('');
         lp[index] = value;
-        return { ...c, lifePaths: lp };
+
+        return { ...c, lifePaths: lp, skills: newSkills, appliedLifePaths: oldApplied };
       })),
 
       applyLifePath: (index, pathName) => set(state => updateActive(state, c => {
@@ -405,13 +605,6 @@ export const useCharacterStore = create<CharacterStore>()(
         return { ...c, lifePaths: lp, skills: newSkills, appliedLifePaths: oldApplied };
       })),
 
-      addDiaryEntry: (text) => set(state => updateActive(state, c => ({
-        ...c, diary: [{ id: generateId(), timestamp: Date.now(), text }, ...c.diary]
-      }))),
-
-      removeDiaryEntry: (id) => set(state => updateActive(state, c => ({
-        ...c, diary: c.diary.filter(e => e.id !== id)
-      }))),
 
       loadCharacter: (data) => set(state => {
         const normalized = normalizeCharacter(data);
@@ -448,10 +641,74 @@ export const useCharacterStore = create<CharacterStore>()(
           return { characters: [c], activeId: c.id };
         }
         return { characters: remaining, activeId: state.activeId === id ? remaining[0].id : state.activeId };
-      })
+      }),
+
+      addPowerPage: () => set(state => updateActive(state, c => {
+        if (c.powerPages.length >= 5) return c;
+        return { ...c, powerPages: [...c.powerPages, { id: generateId(), layout: 4, fontSize: 11, cards: [] }] };
+      })),
+
+      removePowerPage: (pageId) => set(state => updateActive(state, c => {
+        if (c.powerPages.length <= 1) return c;
+        return { ...c, powerPages: c.powerPages.filter(p => p.id !== pageId) };
+      })),
+
+      addDisciplineCard: (pageId, slotIndex = -1) => set(state => updateActive(state, c => ({
+        ...c,
+        powerPages: c.powerPages.map(p => {
+          if (p.id !== pageId) return p;
+          const newCard = {
+            id: generateId(), disciplineId: '', powerId: '', name: '', rank: 1,
+            type: '', activation: '', trait: '', cost: '', difficulty: '', range: '', duration: '', description: '', upgrade: ''
+          };
+          const cards = [...p.cards];
+          if (slotIndex >= 0) {
+            while (cards.length <= slotIndex) {
+              cards.push(null as any);
+            }
+            cards[slotIndex] = newCard;
+          } else {
+            cards.push(newCard);
+          }
+          return { ...p, cards };
+        })
+      }))),
+
+      updateDisciplineCard: (pageId, cardId, data) => set(state => updateActive(state, c => ({
+        ...c,
+        powerPages: c.powerPages.map(p => {
+          if (p.id !== pageId) return p;
+          return {
+            ...p,
+            cards: p.cards.map(card => card.id === cardId ? { ...card, ...data } : card)
+          };
+        })
+      }))),
+
+      removeDisciplineCard: (pageId, cardId) => set(state => updateActive(state, c => ({
+        ...c,
+        powerPages: c.powerPages.map(p => {
+          if (p.id !== pageId) return p;
+          return { ...p, cards: p.cards.filter(card => card.id !== cardId) };
+        })
+      }))),
+
+      updatePowerPageSettings: (pageId, settings) => set(state => updateActive(state, c => ({
+        ...c,
+        powerPages: c.powerPages.map(p => p.id === pageId ? { ...p, ...settings } : p)
+      }))),
+
+      history: [],
+      pushHistory: (changes) => set(state => {
+        if (!changes || changes.length === 0) return state;
+        const item: HistoryItem = { id: crypto.randomUUID(), timestamp: Date.now(), changes };
+        return { history: [item, ...(state.history || [])].slice(0, 50) };
+      }),
+      clearHistory: () => set({ history: [] }),
     }),
     {
       name: 'vtm6e-alpha-storage',
+      storage: createJSONStorage(() => debouncedStorage),
       onRehydrateStorage: () => (state) => {
         if (state && (!state.characters || state.characters.length === 0)) {
           const c = createEmptyCharacter();

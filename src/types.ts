@@ -35,6 +35,7 @@ export interface CharacterSheet {
   resources: Array<{ name: string; dots: number; squares: number; notes: string }>;
   items: string;
   notes: string;
+  biography: string;
   disciplines: Array<{
     id: string;
     name: string;
@@ -47,8 +48,51 @@ export interface CharacterSheet {
   flaws: string;
   nature: { indulgence: string; flash: string };
   beast: { clanBeast: string; rage: string };
-  diary: Array<{ id: string; timestamp: number; text: string }>;
   appliedLifePaths?: (string | null)[];
+  powerPages: PowerPage[];
+}
+
+// ============================================================
+// Силы Дисциплин — карточки
+// ============================================================
+
+export interface PowerData {
+  id: string;
+  name: string;
+  rank: number;
+  type: string;
+  activation: string;
+  trait: string;
+  cost: string;
+  difficulty: string;
+  range: string;
+  duration: string;
+  description: string;
+  upgrade: string;
+}
+
+export interface DisciplineCard {
+  id: string;
+  disciplineId: string;
+  powerId: string;
+  name: string;
+  rank: number;
+  type: string;
+  activation: string;
+  trait: string;
+  cost: string;
+  difficulty: string;
+  range: string;
+  duration: string;
+  description: string;
+  upgrade: string;
+}
+
+export interface PowerPage {
+  id: string;
+  layout?: 4 | 6 | 8 | 10;
+  fontSize?: number;
+  cards: DisciplineCard[];
 }
 
 // ============================================================
@@ -195,6 +239,17 @@ export const SIRE_TYPE_TO_DISCIPLINE: Record<string, string> = {
   'vigilant_sire': 'auspex',
 };
 
+export const SIRE_TYPE_TO_DISCIPLINES: Record<string, string[]> = {
+  'adoptive_sire': ['celerity'],
+  'brood_child': ['potence'],
+  'caring_sire': ['fortitude'],
+  'cruel_sire': ['dominate'],
+  'manipulative_sire': ['dominate'],
+  'secretive_sire': ['auspex'],
+  'unknown_sire': ['celerity'],
+  'vigilant_sire': ['auspex'],
+};
+
 export const MORTAL_LIFE_PATHS: Record<string, string[]> = {
   'artist': ['awareness', 'craft', 'expression', 'knowledge', 'persuasion'],
   'corporate_executive': ['awareness', 'investigation', 'knowledge', 'persuasion', 'subterfuge'],
@@ -317,7 +372,7 @@ export const CREATION_RULES: Record<string, CreationRules> = {
 export function normalizeId(value: string): string {
   if (!value) return value;
   // Если уже ID (lowercase, только латиница/подчёркивания) — возвращаем как есть
-  if (/^[a-z_]+$/.test(value)) return value;
+  if (/^[a-z0-9_]+$/.test(value)) return value;
   // Иначе пробуем найти по русскому названию
   const found = RU_TO_ID[value];
   return found || value;

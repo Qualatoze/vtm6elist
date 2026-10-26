@@ -34,7 +34,28 @@
     "mortal": "MORTAL",
     "specializations": "Specializations at 1, 3, and 5",
     "language": "Change language",
-    "menu": "Menu"
+    "menu": "Menu",
+    "biography": "Biography",
+    "beast_counter": "Beast",
+    "nature_counter": "Nature",
+    "power_cards": "Discipline Cards",
+    "add_page": "Create new page",
+    "add_card": "Add card",
+    "select_discipline": "Select discipline",
+    "select_power": "Select power",
+    "card_type": "Type",
+    "card_activation": "Activation",
+    "card_trait": "Trait",
+    "card_cost": "Cost",
+    "card_difficulty": "Difficulty",
+    "card_range": "Range",
+    "card_duration": "Duration",
+    "card_upgrade": "Upgrade",
+    "delete_page": "Delete page",
+    "confirm_delete_page": "Delete this page with all cards?",
+    "layout": "Layout",
+    "font_size": "Font size",
+    "cards": "cards"
   },
   "attributes": {
     "strength": "Strength",
@@ -213,7 +234,8 @@
     "discipline_name": "Name...",
     "power": "Ability...",
     "clear_sheet": "Clear sheet?",
-    "delete_character": "Delete character?"
+    "delete_character": "Delete character?",
+    "biography": "Character history..."
   },
   "common": {
     "delete_discipline": "Remove discipline",
@@ -247,5 +269,488 @@
   },
   "rage": {
     "label": "Rage"
+  },
+  "powers_meta": {
+    "type": {
+      "physical": "Physical",
+      "mental": "Mental",
+      "social": "Social"
+    },
+    "activation": {
+      "action": "Action",
+      "minor_action": "Minor Action",
+      "reaction": "Reaction",
+      "action_react": "Action / Reaction",
+      "minor_action_react": "Minor Action / Reaction"
+    },
+    "trait": {
+      "strength": "Strength",
+      "dexterity": "Dexterity",
+      "stamina": "Stamina",
+      "charisma": "Charisma",
+      "manipulation": "Manipulation",
+      "composure": "Composure",
+      "intelligence": "Intelligence",
+      "wits": "Wits",
+      "resolve": "Resolve"
+    },
+    "cost": {
+      "vitae_1": "1 Vitae",
+      "vitae_2": "2 Vitae",
+      "vitae_3": "3 Vitae",
+      "will_1": "1 Willpower",
+      "will_2": "2 Willpower",
+      "will_3": "3 Willpower"
+    },
+    "difficulty": {
+      "none": "None",
+      "zero": "0",
+      "wits": "Wits",
+      "resolve": "Resolve",
+      "stamina": "Stamina",
+      "strength": "Strength",
+      "dexterity": "Dexterity",
+      "depends": "Varies"
+    },
+    "range": {
+      "self": "Self",
+      "touch": "Touch",
+      "short": "Short",
+      "medium": "Medium",
+      "long": "Long",
+      "very_long": "Very Long",
+      "near": "Near"
+    },
+    "duration": {
+      "scene": "One Scene",
+      "turn": "One Turn",
+      "instant": "Instantaneous",
+      "night_or_done": "One Night or Until Completed",
+      "week": "One Week",
+      "month": "One Month",
+      "permanent": "Permanent"
+    }
+  },
+  "powers": {
+    "animalism": {
+      "beast_traits": {
+        "name": "Beast Traits",
+        "description": "You call upon your Beast to lend you its talents and partially adopt the abilities of an animal (wolf's snout, owl's eyes, bat's ears, frog's legs, cat's tail, etc.). When activating, choose one specific trait. You gain a bonus to any non-conflict roll where this trait could help. The bonus equals your Animalism dots.",
+        "upgrade": "••: Adopt 2 traits simultaneously. ••••: Adopt 3 traits simultaneously."
+      },
+      "beast_senses": {
+        "name": "Beast Senses",
+        "description": "You sharpen your senses and connect more closely with your Beast, instinctively sensing the presence of the supernatural. You sense other vampires and supernatural beings at short range. While active, add your Animalism dots to any Awareness or Investigation roll related to supernatural presence.",
+        "upgrade": "None."
+      },
+      "gentle_whisper": {
+        "name": "Gentle Whisper",
+        "description": "You give a simple one-sentence verbal command to a visible animal at short range. A Strength roll is required only if the target is a ghoul, familiar, or supernaturally bonded animal (roll against Resolve). The animal obeys literally. The command cannot force the animal to harm itself.",
+        "upgrade": "•: For each Animalism dot, give the same command to 3 more animals of the same species. ••••: Give the command to an entire pack/swarm. The command can force animals to harm themselves."
+      },
+      "beast_messenger": {
+        "name": "Beast Messenger",
+        "description": "You touch an animal and implant a short message (up to 1 minute) for it to deliver. You must know where the recipient is or possess an item linked to them. If the animal resists, a roll against Resolve is needed. The animal delivers the message in your voice.",
+        "upgrade": "••••: Duration — one week, message up to 5 minutes. ••••••: Duration — one month, message up to 10 minutes."
+      },
+      "call_wild": {
+        "name": "Call of the Wild",
+        "description": "You imitate the call of a specific animal. Make a Strength roll against the Resolve of the nearest animal of the chosen species. Successes: 1 (one), 2 (quarter), 3 (half), 4 (majority), 5 (all).",
+        "upgrade": "••: Call 2 species. •••: 4 species. ••••: All animals within range."
+      },
+      "beast_claws": {
+        "name": "Beast Claws",
+        "description": "You transform your nails into claws, extend your maw, etc. Unarmed attacks with the transformed body part deal Damage equal to your Strength dots.",
+        "upgrade": "•••••: Unarmed attacks deal Lethal Damage."
+      },
+      "beast_form": {
+        "name": "Beast Form",
+        "description": "You take the form of a well-known animal roughly your size. Attributes are retained, but you gain +2 to any roll where the animal would have an advantage. You cannot speak or use Social/Mental Disciplines. You know as many forms as your Animalism dots.",
+        "upgrade": "•••: Size from half to 1.5x yours. •••••: From a quarter to double. •••••••: Any animal whose blood you have tasted."
+      },
+      "beast_swarm": {
+        "name": "Beast Swarm",
+        "description": "You leave a mark on the target that attracts hostile animals. Roll against the target's Resolve. Successes: 1 (penalty -1), 2 (-2, quarter of animals), 3 (-2, half, deal damage = half Animalism), 4 (-2, majority, damage = Animalism), 5 (-3, all).",
+        "upgrade": "••••: On half the target's Animalism dots. ••••••: On any number of targets."
+      }
+    },
+    "auspex": {
+      "analysis": {
+        "name": "Analysis",
+        "description": "You gain access to an object's contents as if you had skimmed it fluently. Bypasses passwords and locks. Access persists while you hold the object.",
+        "upgrade": "••: Access to all freely available information. ••••: Hidden knowledge (cipher keys, protected files). ••••••: Supernaturally hidden knowledge (if Auspex > rank of the hiding Discipline)."
+      },
+      "heightened_senses": {
+        "name": "Heightened Senses",
+        "description": "Doubles the range of hearing, sight, and smell. Add your Auspex dots to any Awareness or Investigation roll. In loud noise/bright light, a Dexterity+Wits roll is needed, otherwise -2 penalty to perception.",
+        "upgrade": "None."
+      },
+      "otherworldly_sight": {
+        "name": "Otherworldly Sight",
+        "description": "You sense supernatural beings and traces of Disciplines at short range. Against hidden beings — a Discipline contest. Against hidden objects — a roll against the Discipline's rank.",
+        "upgrade": "None."
+      },
+      "premonition": {
+        "name": "Premonition",
+        "description": "Outside conflict: visions of clues or danger. In conflict (as a reaction to an attack): once per turn, spend 1 Willpower for a bonus to defense against attacks from that target (equal to half your Auspex dots).",
+        "upgrade": "None."
+      },
+      "psychometry": {
+        "name": "Psychometry",
+        "description": "Reading the emotional trace on an object. Difficulty depends on age (2 for a few days, 5+ for 300 years). Each success answers one question about the object's use.",
+        "upgrade": "None."
+      },
+      "telepathy": {
+        "name": "Telepathy",
+        "description": "Transmit simple thoughts without a roll. Read surface thoughts of a willing target without a roll. Against a resisting target — a Discipline roll against Resolve (1 success = 1 thought).",
+        "upgrade": "•••: Complex thoughts, two-way conversation. •••••: Telepathic network with half your Auspex dots of willing targets."
+      },
+      "clairvoyance": {
+        "name": "Clairvoyance",
+        "description": "You project your sight and hearing to a remote point at medium range (it must be visible or you must have been there).",
+        "upgrade": "••••: Point at long range. ••••••: Point at very long range (no need to see it)."
+      },
+      "shared_senses": {
+        "name": "Shared Senses",
+        "description": "You connect to the senses of one visible being. If your blood is in the target, distance doesn't matter. Connecting to all senses gives a -1 penalty to all rolls.",
+        "upgrade": "•••••: Duration one night. •••••••: Active until you stop; number of targets = half your Auspex."
+      }
+    },
+    "celerity": {
+      "cats_grace": {
+        "name": "Cat's Grace",
+        "description": "Automatic success on Dexterity rolls to maintain balance on narrow supports (ledges, wires).",
+        "upgrade": "•: Run on walls. ••: Run on ceilings. ••••: Run on water. (Must start and end the turn on a solid surface.)"
+      },
+      "rapid_reflexes": {
+        "name": "Rapid Reflexes",
+        "description": "+1 die to defensive Dodge rolls. A Strength roll (Diff 0) extends the action for additional turns per success.",
+        "upgrade": "•: +2 dice. ••••: +3 dice. •••••: +4 dice."
+      },
+      "vibrating_hands": {
+        "name": "Vibrating Hands",
+        "description": "Touch destroys/deforms an object (applies -2 penalty to its use). Successes: 1 (wood/glass), 2 (concrete/iron), 3 (steel), 4 (tempered steel), 5 (titanium/diamond).",
+        "upgrade": "•: Object is destroyed. ••: Can attack a creature (add half Celerity to unarmed/light weapon damage). ••••: Extends to medium weapons. ••••••: To heavy weapons."
+      },
+      "faster_wind": {
+        "name": "Faster Than Wind",
+        "description": "Each turn, you can move twice (up to medium range per turn).",
+        "upgrade": "•••: If you moved, the target of your first melee attack is considered caught off guard."
+      },
+      "urgent_work": {
+        "name": "Urgent Work",
+        "description": "A task that takes a turn is completed in seconds. The action becomes a Minor Action. A task that takes a scene/30 minutes — 1 minute. Does not speed up attacks/defense.",
+        "upgrade": "•••: 2 extended tasks simultaneously. •••••: 3 tasks."
+      },
+      "grace_will": {
+        "name": "Grace of Will",
+        "description": "Increase Dexterity by 1 until the end of the scene (counts as a Blood Surge).",
+        "upgrade": "•••: Spend additional Willpower to increase Dexterity (1 Willpower = +1 Dexterity, within Blood Surge limits)."
+      },
+      "elusive_pass": {
+        "name": "Elusive Pass",
+        "description": "Choose a body part — it passes through solid objects. If the body part remains inside the object at the end of the turn, it becomes Maimed (you can spend 1 Willpower to extend the Discipline for 1 turn).",
+        "upgrade": "••••: Your entire body vibrates. If inside — ejected outward, you take 10 Damage."
+      },
+      "combat_speed": {
+        "name": "Combat Speed",
+        "description": "+1 additional action in the current turn. At the start of the next turn, spend 1 Willpower to maintain.",
+        "upgrade": "•••••: Up to 2 additional actions (1 Willpower each). •••••••: Up to 3 additional actions."
+      }
+    },
+    "corruption": {
+      "refutation": {
+        "name": "Refutation",
+        "description": "Roll against the target's Resolve. On success, on your next action the target is forced to say/do the opposite of what they intended.",
+        "upgrade": "••: Duration one scene (target must change tasks/arguments)."
+      },
+      "nightmare_flashes": {
+        "name": "Nightmare Flashes",
+        "description": "Roll against Composure. The target gains the 'Frightened' state while they see you.",
+        "upgrade": "••: 'Overwhelmed by Terror' state. ••••: Number of targets = your Corruption dots."
+      },
+      "insecurity": {
+        "name": "Insecurity",
+        "description": "Choose an activity/task. Roll against Composure. The target gains a -1 penalty to rolls for that activity. The effect fades if the target successfully completes the task (3+ successes).",
+        "upgrade": "••: If the target is a vampire, they spend 1 more Willpower when activating Disciplines. ••••: Number of targets = your Corruption dots."
+      },
+      "dark_secrets": {
+        "name": "Dark Secrets",
+        "description": "Roll against Composure. The target involuntarily reveals a deep, dark secret (causing shame). Using it in a social situation gives +2 dice to social attacks against the target.",
+        "upgrade": "•••: The target succumbs to dark impulses (-2 penalty to everything else, +2 to impulses)."
+      },
+      "poison_heart": {
+        "name": "Poison Heart",
+        "description": "Roll against Composure. A vampire target marks Beast Counter cells = your successes. An NPC target takes Willpower Damage = your Corruption dots + 1 per extra success.",
+        "upgrade": "•••: On half your Corruption dots of targets."
+      },
+      "stain": {
+        "name": "Stain",
+        "description": "Roll against Composure. The target gains 'Agitated' and 'Captured' states. On their turn, the target can use a Minor Action to spend 2 Willpower to force you to reroll (if you fail, the states fade).",
+        "upgrade": "•••: On half your Corruption dots of targets."
+      },
+      "separation": {
+        "name": "Separation",
+        "description": "Roll against Composure. The target loses connection with allies (cannot help, -2 penalty to ally defense, Blood Bonds weaken by 1 step, ignores Vinculum).",
+        "upgrade": "••••: On half the targets, range — short."
+      },
+      "deceive_heart": {
+        "name": "Deceive Heart",
+        "description": "Roll against Composure. The target considers you a reliable ally (+2 dice to your social rolls against them). Fades on aggression from your side.",
+        "upgrade": "••••: On half your Corruption dots of targets."
+      }
+    },
+    "dominate": {
+      "apathy": {
+        "name": "Apathy",
+        "description": "Roll against Composure. The target stops feeling 'Agitated'/'Strongly Agitated' but gains a -1 penalty to all rolls (except self-preservation).",
+        "upgrade": "••: Completely removes states, -2 penalty. ••••: On half your Dominate dots of targets, targets gain 'Stunned'."
+      },
+      "cloud_memory": {
+        "name": "Cloud Memory",
+        "description": "Roll against Resolve. The target forgets up to the last 5 minutes.",
+        "upgrade": "••: Up to 10 minutes in the last 24 hours. ••••: Up to 1 hour in the last 5 years (precise edits). ••••••: Up to 24 hours of any age."
+      },
+      "command": {
+        "name": "Command",
+        "description": "A simple one-sentence verbal command. Roll against Resolve. The target obeys literally, cannot reveal deep secrets or harm themselves.",
+        "upgrade": "••: Up to 3 extra targets per Dominate dot. ••••: The command can force self-harm."
+      },
+      "suppress_will": {
+        "name": "Suppress Will",
+        "description": "Roll against Resolve. The target cannot use Disciplines/abilities requiring Willpower. Each extra success extends by 1 turn. (For NPCs, blocks random abilities = half your Dominate).",
+        "upgrade": "•••: On half your Dominate dots of targets."
+      },
+      "implanted_directive": {
+        "name": "Implanted Directive",
+        "description": "Roll against Resolve. You implant a complex command that triggers from a simple sensory signal (sight, sound, touch).",
+        "upgrade": "•••: The implantation lasts indefinitely while asleep. •••••: On half your Dominate dots of targets."
+      },
+      "suppress_mind": {
+        "name": "Suppress Mind",
+        "description": "Roll against Resolve. Reduce one mental Attribute of the target by half your Dominate dots. (For NPCs, reduces the Difficulty of rolls affecting their psyche).",
+        "upgrade": "None."
+      },
+      "pass_command": {
+        "name": "Pass Command",
+        "description": "You implant a known Discipline of Dominate (lower rank than yours) into a visible target. The carrier passes it to another being on touch or condition fulfillment.",
+        "upgrade": "••••: Unlimited duration (until the carrier passes it or dies)."
+      },
+      "drain_will": {
+        "name": "Drain Will",
+        "description": "Choose a visible target. Each time you make a social attack against them, make a Discipline roll against Resolve. On success, the target takes Willpower Damage = your Dominate dots. (A mortal at 0 Willpower — nervous breakdown; A vampire — risk of Frenzy).",
+        "upgrade": "None."
+      }
+    },
+    "fortitude": {
+      "endurance": {
+        "name": "Endurance",
+        "description": "+2 dice to resist 'Exhausted' and 'Depleted' states.",
+        "upgrade": "•••: You don't experience 'Depletion' from Hunger. •••: Immune to 'Exhausted'/'Depleted'. ••••: At 0 Vitae, you don't fall into torpor (but Damage becomes Lethal)."
+      },
+      "toughness": {
+        "name": "Toughness",
+        "description": "As a reaction to a melee attack, make a Strength roll instead of defense. On success — 0 Damage. Vitae cost only on first activation.",
+        "upgrade": "•: Defense against ranged attacks. ••: Duration 2 turns. ••••: One scene."
+      },
+      "spirit_resilience": {
+        "name": "Spirit Resilience",
+        "description": "Reaction to a social attack or mental effect. Bonus to social defense = half your Fortitude (including defense against Dominate).",
+        "upgrade": "None."
+      },
+      "restore_limb": {
+        "name": "Restore Limb",
+        "description": "Removes the 'Maimed' state from one limb.",
+        "upgrade": "••: Feed a willing target 1 Vitae to heal them. •••: Restore your own lost limb (if most of it remains). ••••: Feed a target 1 Vitae to restore their lost limb."
+      },
+      "shared_fortitude": {
+        "name": "Shared Fortitude",
+        "description": "Feed a willing target 2 Vitae. The target reduces incoming Damage by your Generation modifier (stacks with their own). You lose this protection.",
+        "upgrade": "None."
+      },
+      "immovable": {
+        "name": "Immovable",
+        "description": "You cannot be moved against your will. Bonus to defense against Grapple attacks = half your Fortitude.",
+        "upgrade": "None."
+      },
+      "cleansing": {
+        "name": "Cleansing",
+        "description": "Removes the effect of one Social/Mental Discipline of rank 1. Against higher-rank Disciplines — a contest of Discipline rolls with the creator.",
+        "upgrade": "•••: Removes Disciplines up to rank 2 without a contest. ••••: Up to rank 3."
+      },
+      "punishing_skin": {
+        "name": "Punishing Skin",
+        "description": "Reaction to an attack. The attacker receives half the Damage you took (after modifiers). Melee weapons break, projectiles are destroyed.",
+        "upgrade": "•••••: Additional 1 Vitae — the attacker takes the same Damage as you (100%)."
+      }
+    },
+    "obfuscate": {
+      "cloak_shadows": {
+        "name": "Cloak of Shadows",
+        "description": "Hiding behind cover and remaining still, you gain a stealth bonus = your Obfuscate dots. The Discipline fades on movement, noise, or detection.",
+        "upgrade": "•: Movement doesn't break the Discipline (if no sudden sounds/smells). •••: No cover needed, can vanish in plain sight, Minor Action activation. ••••: Extends to allied targets' Obfuscate (requires 1 Willpower at start of turn)."
+      },
+      "disguise": {
+        "name": "Disguise",
+        "description": "You hide a number of small items = your Obfuscate dots. On thorough search — a roll against the searcher's Wits.",
+        "upgrade": "••: Medium-sized items. ••••: Large items."
+      },
+      "silence_death": {
+        "name": "Silence of Death",
+        "description": "All sounds you make disappear (does not fool microphones).",
+        "upgrade": "••: Area up to near range, silences 1 extra visible creature per Obfuscate dot. •••: Minor Action activation. •••••: Area up to short range."
+      },
+      "double_speak": {
+        "name": "Double Speak",
+        "description": "Choose targets = your Obfuscate dots. They understand the hidden message, others don't. A suspicious person can make a Wits roll to understand.",
+        "upgrade": "None."
+      },
+      "fools_gold": {
+        "name": "Fool's Gold",
+        "description": "You disguise small items (half your Obfuscate dots) as others. On touch, the target can make a Wits roll to recognize the deception.",
+        "upgrade": "•••: Medium items. •••••: Large items."
+      },
+      "mind_games": {
+        "name": "Mind Games",
+        "description": "Choose targets = half your Obfuscate dots. Roll against Resolve. On success, the target is confused (-1 penalty to actions dependent on senses).",
+        "upgrade": "None."
+      },
+      "terrible_reality": {
+        "name": "Terrible Reality",
+        "description": "Works automatically on mortals. On supernatural beings — a roll against Composure. The target sees/hears/feels their worst nightmare and gains 'Overwhelmed by Terror'.",
+        "upgrade": "None."
+      },
+      "mask_thousand_faces": {
+        "name": "Mask of a Thousand Faces",
+        "description": "You take the form of an unremarkable stranger, appropriate for the location. Others don't suspect you. Does not provide documents.",
+        "upgrade": "•••••: Extends to half your Obfuscate dots of willing targets at short range."
+      }
+    },
+    "oblivion": {
+      "cloud_darkness": {
+        "name": "Cloud of Darkness",
+        "description": "You create a cloud of darkness. Beings inside/near gain +2 dice to stealth. Normal light dims.",
+        "upgrade": "••: Moves by Minor Action, muffles sounds. ••••: Affects all at short range from it."
+      },
+      "shadow_play": {
+        "name": "Shadow Play",
+        "description": "You change the shape of shadows (2D images). You can modify 1 shadow per Oblivion dot (size no larger than yours).",
+        "upgrade": "••: Size x2. ••••: Size x3."
+      },
+      "shadow_tools": {
+        "name": "Shadow Tools",
+        "description": "You create simple items/tools from darkness (number = your Oblivion dots). They vanish in bright light.",
+        "upgrade": "••: Can create weapons (without ammunition)."
+      },
+      "draining_darkness": {
+        "name": "Draining Darkness",
+        "description": "You extend a shadow toward the target. While the target is in the shadow, your social attacks deal extra Willpower Damage = half your Oblivion.",
+        "upgrade": "None."
+      },
+      "grasping_shadows": {
+        "name": "Grasping Shadows",
+        "description": "The target's shadow grabs them. A Discipline roll against the target's Dexterity. The target gains 'Captured'. As an action, you can strangle the victim (damage = half Oblivion + 1 per extra success). Fades in sunlight.",
+        "upgrade": "None."
+      },
+      "shadow_mask": {
+        "name": "Shadow Mask",
+        "description": "Remaining still in shadow/darkness, you cannot be detected (even by animals) until you draw attention.",
+        "upgrade": "•••: On half your Oblivion dots of extra targets at near range (must be still)."
+      },
+      "nightmares": {
+        "name": "Nightmares",
+        "description": "Choose targets = your Oblivion dots. Roll against Composure. The target gains 'Frightened'. As a Minor Action, you can intensify to 'Overwhelmed by Terror' (requires 1 Willpower for each target after the first).",
+        "upgrade": "None."
+      },
+      "step_shadow": {
+        "name": "Step Through Shadow",
+        "description": "You enter a shadow (sufficient to hide you) and exit from another visible shadow within range.",
+        "upgrade": "•••: Take willing targets with you (half Oblivion). ••••: Can take unwilling targets (requires Grapple or a Discipline roll). •••••: Exit from shadow at medium range."
+      }
+    },
+    "potence": {
+      "bull_rush": {
+        "name": "Bull Rush",
+        "description": "You charge and make a melee attack with a bonus = half your Potence. On success, the target gains 'Staggered'.",
+        "upgrade": "••: Knocks back to near range (damage from impact = half Potence). •••: To short range. ••••: To medium range."
+      },
+      "imprint": {
+        "name": "Imprint",
+        "description": "You press your fingers into a solid surface. Bonus to resist movement = your Potence dots. Reaction to effects that move you.",
+        "upgrade": "••: Run on walls/ceiling, duration until end of scene."
+      },
+      "mighty_leap": {
+        "name": "Mighty Leap",
+        "description": "Leap to any point at short range. Reduces the Difficulty of jump rolls by your Potence dots.",
+        "upgrade": "•: Spend 1 Willpower on landing — a Discipline roll against targets' Stamina at near range (knocks them down)."
+      },
+      "bonebreaker": {
+        "name": "Bonebreaker",
+        "description": "A precise melee attack. On success, the target gains 'Maimed' on a chosen body part. On failure, you can spend 1 Willpower to maintain the effect until the next turn.",
+        "upgrade": "••••: Additional 2 Vitae — dismemberment (severing a body part)."
+      },
+      "earthquake": {
+        "name": "Earthquake",
+        "description": "You strike the ground. A Discipline roll against the target's Stamina if they're touching the surface. Damage = your Potence dots, the target gains 'Staggered'.",
+        "upgrade": "•••: Strikes a number of targets = Potence (half damage). •••••: Strikes all (half damage, can exclude targets = Potence)."
+      },
+      "mighty_blow": {
+        "name": "Mighty Blow",
+        "description": "Your next attack deals extra Damage = half your Potence.",
+        "upgrade": "None."
+      },
+      "true_strike": {
+        "name": "True Strike",
+        "description": "Your next melee attack hits automatically (base success). Cannot dodge or parry.",
+        "upgrade": "None."
+      },
+      "war_cry": {
+        "name": "War Cry",
+        "description": "Choose targets = your Potence dots. A Discipline roll. The target gains 'Frightened'. You gain a bonus to resist fear and helpless Frenzy = half your Potence.",
+        "upgrade": "None."
+      }
+    },
+    "presence": {
+      "awe": {
+        "name": "Awe",
+        "description": "Choose an effect (can change for 1 Willpower at start of turn): 1. Awe: +Presence to social rolls against hostile targets. 2. Inspiration: Allies gain +half Presence to social rolls. 3. Intimidation: Enemies (up to 2x Presence) make a Composure roll, otherwise penalty to resist Intimidation/fear = half Presence.",
+        "upgrade": "None."
+      },
+      "daunting_gaze": {
+        "name": "Daunting Gaze",
+        "description": "While the target sees you, they gain a -1 penalty to all rolls. Fades if you don't see the target or are far away.",
+        "upgrade": "••: As a reaction, spend 1 Willpower and pass a Composure roll — the target gains 'Frightened' until their next turn. •••: +1 target per Presence dot. ••••: Works if targets hear/see you."
+      },
+      "kindle_emotions": {
+        "name": "Kindle Emotions",
+        "description": "Roll against Composure. The target gains 'Agitated' and experiences the chosen emotion.",
+        "upgrade": "•: Up to 3 extra targets per Presence dot. ••: As an action and 2 Willpower, cause an emotional crisis ('Strongly Agitated'). ••••: Crisis works on vampires (they fall into Frenzy)."
+      },
+      "captivating_gaze": {
+        "name": "Captivating Gaze",
+        "description": "Roll against Resolve. The target gains 'Stunned' while you look at each other.",
+        "upgrade": "•••: No need to maintain eye contact (target just needs to see you). •••••••: On half your Presence dots of targets."
+      },
+      "find_composure": {
+        "name": "Find Composure",
+        "description": "Touch the target. The target doesn't risk falling into Frenzy on a painful failure (if Willpower > 0). +1 die to resist fear and helpless Frenzy.",
+        "upgrade": "•••: On half your Presence dots of targets at short range."
+      },
+      "redirect_desire": {
+        "name": "Redirect Desire",
+        "description": "The target's intentions shift toward your desire, all other rolls gain a -2 penalty. Cannot force self-harm/harm to loved ones.",
+        "upgrade": "•••: On half your Presence dots of targets."
+      },
+      "friends_to_enemies": {
+        "name": "Friends to Enemies",
+        "description": "Roll against the higher Composure of two targets. Strengthening (+2 dice to help each other) or Weakening (-2 dice, no help allowed).",
+        "upgrade": "•••••: On half your Presence dots of targets (any pairs)."
+      },
+      "transcendent_aura": {
+        "name": "Transcendent Aura",
+        "description": "Others consider you untouchable. If someone tries to approach without permission — a roll against Resolve. On success, they cannot approach to near range. You can exclude targets = your Presence dots.",
+        "upgrade": "None."
+      }
+    }
   }
 }

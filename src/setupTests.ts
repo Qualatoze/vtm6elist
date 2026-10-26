@@ -8,8 +8,9 @@ Object.defineProperty(window.navigator, 'vibrate', {
 
 // Mock crypto.randomUUID if not available in jsdom
 if (!crypto.randomUUID) {
-  (global as any).crypto = {
-    ...((global as any).crypto || {}),
-    randomUUID: () => Math.random().toString(36).substring(2, 10) + '-' + Math.random().toString(36).substring(2, 10)
-  };
+  Object.defineProperty(globalThis.crypto, 'randomUUID', {
+    writable: true,
+    configurable: true,
+    value: () => Math.random().toString(36).substring(2, 10) + '-' + Math.random().toString(36).substring(2, 10)
+  });
 }

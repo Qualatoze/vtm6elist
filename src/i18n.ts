@@ -4,7 +4,9 @@ import ru from './locales/ru.json';
 import en from './locales/en.json';
 import zh from './locales/zh.json';
 
-const storedLang = typeof window !== 'undefined' ? (localStorage.getItem('vtm6e-lang') || 'ru') : 'ru';
+import { safeStorage } from './utils/storage';
+
+const storedLang = safeStorage.get('vtm6e-lang') || 'ru';
 
 i18n.use(initReactI18next).init({
   resources: {

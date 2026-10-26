@@ -3,6 +3,7 @@ import { useCharacterStore } from '../store';
 import { DashedDotRating } from './DashedDotRating';
 import { useTranslation } from 'react-i18next';
 import { NATURES_LIST, ALL_LIFE_PATHS, MORTAL_LIFE_PATHS, VAMPIRE_LIFE_PATHS, DISCIPLINES_LIST } from '../types';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const AnkhIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -11,17 +12,6 @@ const AnkhIcon = () => (
   </svg>
 );
 
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const mql = window.matchMedia('(max-width: 768px)');
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mql.addEventListener('change', handler);
-    setIsMobile(mql.matches);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
-  return isMobile;
-};
 
 const sheetStyle: React.CSSProperties = {
   width: '210mm',
@@ -54,7 +44,7 @@ export const SheetPage2 = () => {
   const slots = Math.max(1, character.disciplines.length);
 
   return (
-    <div id="character-sheet-2" style={{ ...sheetStyle, width: isMobile ? '100%' : '210mm' }}>
+    <div id="character-sheet-2" className="sheet-page" style={{ ...sheetStyle, width: 'min(210mm, 100%)' }}>
       {/* HEADER */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', width: '100%' }}>
         <AnkhIcon />
@@ -214,7 +204,7 @@ export const SheetPage2 = () => {
             <textarea
               value={character.clanTraits}
               onChange={(e) => updateField('clanTraits', e.target.value)}
-              style={{ flex: 1, width: '100%', background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '4px', resize: 'none', fontSize: '10px', outline: 'none', boxSizing: 'border-box', overflow: 'hidden' }}
+              style={{ flex: 1, width: '100%', background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '4px', resize: 'none', fontSize: '10px', outline: 'none', boxSizing: 'border-box', overflow: 'auto' }}
             />
           </div>
 
@@ -223,7 +213,7 @@ export const SheetPage2 = () => {
             <textarea
               value={character.merits}
               onChange={(e) => updateField('merits', e.target.value)}
-              style={{ flex: 1, width: '100%', background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '4px', resize: 'none', fontSize: '10px', outline: 'none', boxSizing: 'border-box', overflow: 'hidden' }}
+              style={{ flex: 1, width: '100%', background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '4px', resize: 'none', fontSize: '10px', outline: 'none', boxSizing: 'border-box', overflow: 'auto' }}
             />
           </div>
 
@@ -232,7 +222,7 @@ export const SheetPage2 = () => {
             <textarea
               value={character.flaws}
               onChange={(e) => updateField('flaws', e.target.value)}
-              style={{ flex: 1, width: '100%', background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '4px', resize: 'none', fontSize: '10px', outline: 'none', boxSizing: 'border-box', overflow: 'hidden' }}
+              style={{ flex: 1, width: '100%', background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '4px', resize: 'none', fontSize: '10px', outline: 'none', boxSizing: 'border-box', overflow: 'auto' }}
             />
           </div>
         </div>
@@ -296,7 +286,7 @@ export const SheetPage2 = () => {
             <textarea
               value={character.notes || ''}
               onChange={(e) => updateField('notes', e.target.value)}
-              style={{ flex: 1, width: '100%', background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '4px', resize: 'none', fontSize: '10px', outline: 'none', boxSizing: 'border-box', overflow: 'hidden' }}
+              style={{ flex: 1, width: '100%', background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '4px', resize: 'none', fontSize: '10px', outline: 'none', boxSizing: 'border-box', overflow: 'auto' }}
             />
           </div>
         </div>

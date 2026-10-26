@@ -4,6 +4,7 @@ import { t } from '../i18n';
 import { SKILLS_LIST, NOSTALGIA_DECADES, VAMPIRE_TYPES, CLANS_LIST, SIRE_TYPES_LIST, DISCIPLINES_LIST } from '../types';
 import { DotRating } from './DotRating';
 import { HumanityTracker } from './HumanityTracker';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const ATTR_GROUPS = [
   { key: 'physical' as const, title: 'attributes_groups.physical', attrs: ['strength', 'dexterity', 'stamina'] },
@@ -19,18 +20,6 @@ const ATTR_LABELS: Record<string, string> = {
 
 const GENERATION_VALUES = Array.from({ length: 16 }, (_, i) => i + 2);
 const GENERATION_OPTIONS = GENERATION_VALUES.map(v => String(v));
-
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const mql = window.matchMedia('(max-width: 768px)');
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mql.addEventListener('change', handler);
-    setIsMobile(mql.matches);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
-  return isMobile;
-};
 
 const sheetStyle: React.CSSProperties = {
   width: '210mm',
@@ -137,16 +126,21 @@ export const SheetPage1 = () => {
   const isMobile = useIsMobile();
 
   const [isCustomClan, setIsCustomClan] = useState(
-    () => !CLANS_LIST.some(c => c.id === character.meta.clan)
+    () => character.meta.clan !== '' && !CLANS_LIST.some(c => c.id === character.meta.clan)
   );
   const [isCustomNostalgia, setIsCustomNostalgia] = useState(
-    () => !NOSTALGIA_DECADES.some(d => d.id === character.meta.nostalgia)
+    () => character.meta.nostalgia !== '' && !NOSTALGIA_DECADES.some(d => d.id === character.meta.nostalgia)
   );
+
+  useEffect(() => {
+    setIsCustomClan(character.meta.clan !== '' && !CLANS_LIST.some(c => c.id === character.meta.clan));
+    setIsCustomNostalgia(character.meta.nostalgia !== '' && !NOSTALGIA_DECADES.some(d => d.id === character.meta.nostalgia));
+  }, [character.id, character.meta.clan, character.meta.nostalgia]);
 
   const sheetWidth = isMobile ? '100%' : '210mm';
   
   return (
-    <div id="character-sheet" style={{ ...sheetStyle, width: sheetWidth }}>
+    <div id="character-sheet" className="sheet-page" style={{ ...sheetStyle, width: sheetWidth }}>
       {/* ===== 1. ШАПКА ===== */}
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '6px', marginBottom: '10px' }}>
         {/* Левая колонка */}
@@ -236,7 +230,7 @@ export const SheetPage1 = () => {
                         const val = character.attributes[group.key][attr as keyof typeof character.attributes[typeof group.key]];
                         const isFilled = pos <= val;
                         return (
-                          <button key={`a-${i}`} onClick={() => updateAttribute(group.key, attr, pos)} style={{ width: '16px', height: '16px', background: isFilled ? 'var(--dot-color)' : 'transparent', border: `1px solid ${isFilled ? 'var(--dot-color)' : 'var(--border)'}`, borderRadius: '50%', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
+                          <button key={`a-${i}`} onClick={() => updateAttribute(group.key, attr, pos === val ? 0 : pos)} style={{ width: '16px', height: '16px', background: isFilled ? 'var(--dot-color)' : 'transparent', border: `1px solid ${isFilled ? 'var(--dot-color)' : 'var(--border)'}`, borderRadius: '50%', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
                         );
                       })}
                     </div>
@@ -247,7 +241,7 @@ export const SheetPage1 = () => {
                         const isFilled = pos <= val;
                         const isThreshold = pos >= 6;
                         return (
-                          <button key={`b-${i}`} onClick={() => updateAttribute(group.key, attr, pos)} style={{ width: '16px', height: '16px', background: isFilled ? (isThreshold ? 'var(--accent)' : 'var(--dot-color)') : 'transparent', border: `1px solid ${isFilled ? (isThreshold ? 'var(--accent)' : 'var(--dot-color)') : 'var(--border)'}`, borderRadius: '50%', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
+                          <button key={`b-${i}`} onClick={() => updateAttribute(group.key, attr, pos === val ? 0 : pos)} style={{ width: '16px', height: '16px', background: isFilled ? (isThreshold ? 'var(--accent)' : 'var(--dot-color)') : 'transparent', border: `1px solid ${isFilled ? (isThreshold ? 'var(--accent)' : 'var(--dot-color)') : 'var(--border)'}`, borderRadius: '50%', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
                         );
                       })}
                     </div>
@@ -331,20 +325,27 @@ export const SheetPage1 = () => {
                 <DotRating total={5} value={character.resources[i]?.dots || 0} onChange={(v) => useCharacterStore.getState().updateResource(i, 'dots', v)} size={12} />
               </div>
               <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
-                {Array.from({ length: 5 }).map((_, si) => (
-                  <button
-                    key={si}
-                    onClick={() => useCharacterStore.getState().updateResource(i, 'squares', si + 1)}
-                    style={{
-                      width: '12px', height: '12px',
-                      background: (character.resources[i]?.squares || 0) >= si + 1 ? 'var(--dot-color)' : 'transparent',
-                      border: `1px solid var(--border)`,
-                      borderRadius: '0',
-                      cursor: 'pointer',
-                      padding: 0,
-                    }}
-                  />
-                ))}
+                {Array.from({ length: 5 }).map((_, si) => {
+                  const currentSquares = character.resources[i]?.squares || 0;
+                  const isFilled = currentSquares >= si + 1;
+                  return (
+                    <button
+                      key={si}
+                      onClick={() => {
+                        const newVal = (si + 1 === currentSquares) ? 0 : (si + 1);
+                        useCharacterStore.getState().updateResource(i, 'squares', newVal);
+                      }}
+                      style={{
+                        width: '12px', height: '12px',
+                        background: isFilled ? 'var(--dot-color)' : 'transparent',
+                        border: `1px solid var(--border)`,
+                        borderRadius: '0',
+                        cursor: 'pointer',
+                        padding: 0,
+                      }}
+                    />
+                  );
+                })}
               </div>
             </div>
           ))}

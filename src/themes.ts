@@ -26,7 +26,7 @@ export const THEMES: Theme[] = [
     accent: '#000000',
     border: '#000000',
     headerBg: 'rgba(0, 0, 0, 0.08)',
-    headerText: '#fff',
+    headerText: '#000000',
     dotColor: '#000000',
     cardBorder: '#cccccc',
     glow: 'rgba(0, 0, 0, 0.2)',

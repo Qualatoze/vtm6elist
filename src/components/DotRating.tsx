@@ -53,6 +53,7 @@ export const DotRating = ({
         return (
           <button
             key={i}
+            aria-label={`Dot ${i + 1} of ${total}, current value ${value}`}
             onClick={() => {
               haptic();
               onChange && onChange(i + 1 === value ? i : i + 1);

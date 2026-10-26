@@ -86,20 +86,9 @@ select option { color: var(--text); background-color: var(--bg); }
     display: none !important;
   }
 
-  #character-sheet {
-    page-break-after: always;
-    break-after: page;
-  }
-
-  #character-sheet-2 {
-    page-break-before: always;
-    break-before: page;
-    page-break-after: auto;
-  }
-
-  #character-sheet,
-  #character-sheet-2 {
+  .sheet-page {
     width: 210mm !important;
+    height: 297mm !important;
     min-height: 297mm !important;
     max-height: 297mm !important;
     margin: 0 !important;
@@ -109,12 +98,15 @@ select option { color: var(--text); background-color: var(--bg); }
     overflow: hidden !important;
   }
 
+  .sheet-page:not(:last-of-type) {
+    page-break-after: always;
+    break-after: page;
+  }
+
   /* Слегка ужимаем инпуты в печати */
-  #character-sheet input,
-  #character-sheet select,
-  #character-sheet textarea,
-  #character-sheet-2 input,
-  #character-sheet-2 textarea {
+  .sheet-page input,
+  .sheet-page select,
+  .sheet-page textarea {
     font-size: 10px !important;
     padding: 1px 3px !important;
   }
@@ -149,5 +141,14 @@ button:focus-visible {
 }
 .icon-btn:hover {
   background: rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--panel) 90%, transparent);
   color: var(--accent);
+}
+
+/* ===== THIN SCROLLBARS FOR CHARACTER SHEET TEXTAREAS ===== */
+#character-sheet textarea,
+#character-sheet-2 textarea,
+#character-sheet-3 textarea {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
