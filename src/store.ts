@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { CharacterSheet, SKILLS_LIST, CLAN_DATA, VAMPIRE_TYPES, NOSTALGIA_DECADES, GENERATION_TO_MODIFIER, VAMPIRE_TYPE_TO_GENERATION, SIRE_TYPE_TO_DISCIPLINE, SIRE_TYPE_TO_DISCIPLINES, NATURE_TO_FLASH, MORTAL_LIFE_PATHS, VAMPIRE_LIFE_PATHS, normalizeId, DisciplineCard, PowerPage } from './types';
+import { CharacterSheet, InventoryItem, SKILLS_LIST, CLAN_DATA, VAMPIRE_TYPES, NOSTALGIA_DECADES, GENERATION_TO_MODIFIER, VAMPIRE_TYPE_TO_GENERATION, SIRE_TYPE_TO_DISCIPLINE, SIRE_TYPE_TO_DISCIPLINES, NATURE_TO_FLASH, MORTAL_LIFE_PATHS, VAMPIRE_LIFE_PATHS, normalizeId, DisciplineCard, PowerPage } from './types';
 import { t } from './i18n';
 import { DISCIPLINE_POWERS } from './data/disciplinePowers';
 import { debouncedStorage } from './utils/debouncedStorage';
@@ -39,6 +39,7 @@ export const createEmptyCharacter = (): CharacterSheet => ({
   skills: { ...initialSkills },
   resources: [{ name: t('resources.wealth'), dots: 0, squares: 0, notes: '' }],
   items: '',
+  inventory: [],
   disciplines: [],
   lifePaths: [], clanTraits: '', merits: '', flaws: '', notes: '', biography: '',
   nature: { indulgence: '', flash: '' },
@@ -71,6 +72,9 @@ interface CharacterStore {
   addResource: () => void;
   updateResource: (index: number, field: string, value: any) => void;
   removeResource: (index: number) => void;
+  addInventoryItem: () => void;
+  updateInventoryItem: (id: string, field: keyof InventoryItem, value: string) => void;
+  removeInventoryItem: (id: string) => void;
   addDiscipline: () => void;
   updateDiscipline: (index: number, field: string, value: any) => void;
   updateDisciplinePower: (index: number, lineIndex: 0 | 1 | 2 | 3 | 4, value: string) => void;
@@ -106,13 +110,10 @@ const wasI18nKey = (v?: string) => !!v && /^(clans|natures|powers|powers_meta)\.
 const migrateCard = (card: any): any => {
   if (!card) return null;
   const id = card.id || generateId();
-  // Already migrated — name is an i18n key
-  if (card.name && card.name.startsWith('powers.')) {
-    return { ...card, id };
-  }
-  // Try to find the power by disciplineId + powerId
+
   const disc = DISCIPLINE_POWERS[card.disciplineId];
   const power = disc?.powers.find((p: any) => p.id === card.powerId);
+
   if (power) {
     return {
       ...card,
@@ -126,8 +127,9 @@ const migrateCard = (card: any): any => {
       difficulty: power.difficulty,
       range: power.range,
       duration: power.duration,
-      description: power.description,
-      upgrade: power.upgrade,
+      // Если описание было кастомным (не начинается с ключа), оставляем его, иначе берем из справочника
+      description: (card.description && !card.description.startsWith('powers.')) ? card.description : power.description,
+      upgrade: (card.upgrade && !card.upgrade.startsWith('powers.')) ? card.upgrade : power.upgrade,
     };
   }
   return { ...card, id };
@@ -198,6 +200,7 @@ const normalizeCharacter = (c: CharacterSheet): CharacterSheet => {
     } : c.nature,
     lifePaths: c.lifePaths || [],
     resources: c.resources || [],
+    inventory: Array.isArray(c.inventory) ? c.inventory : [],
     appliedLifePaths: c.appliedLifePaths || [null, null, null, null, null, null, null, null],
     powerPages: Array.isArray(c.powerPages) && c.powerPages.length > 0
       ? c.powerPages.map(page => ({
@@ -504,6 +507,21 @@ export const useCharacterStore = create<CharacterStore>()(
 
       removeResource: (index) => set(state => updateActive(state, c => ({
         ...c, resources: c.resources.filter((_, i) => i !== index)
+      }))),
+
+      addInventoryItem: () => set(state => updateActive(state, c => ({
+        ...c,
+        inventory: [...(c.inventory || []), { id: crypto.randomUUID(), name: '', qty: '', description: '' }]
+      }))),
+
+      updateInventoryItem: (id, field, value) => set(state => updateActive(state, c => ({
+        ...c,
+        inventory: (c.inventory || []).map(item => item.id === id ? { ...item, [field]: value } : item)
+      }))),
+
+      removeInventoryItem: (id) => set(state => updateActive(state, c => ({
+        ...c,
+        inventory: (c.inventory || []).filter(item => item.id !== id)
       }))),
 
       addDiscipline: () => set(state => updateActive(state, c => ({

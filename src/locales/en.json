@@ -55,7 +55,12 @@
     "confirm_delete_page": "Delete this page with all cards?",
     "layout": "Layout",
     "font_size": "Font size",
-    "cards": "cards"
+    "cards": "cards",
+    "inventory": "Inventory",
+    "item_name": "Name",
+    "item_qty": "Qty",
+    "item_desc": "Description",
+    "add_item": "Add Item"
   },
   "attributes": {
     "strength": "Strength",
@@ -235,7 +240,10 @@
     "power": "Ability...",
     "clear_sheet": "Clear sheet?",
     "delete_character": "Delete character?",
-    "biography": "Character history..."
+    "biography": "Character history...",
+    "item_name": "Item name...",
+    "item_desc": "Properties, weight, notes...",
+    "empty_inventory": "Inventory is empty. Add your first item."
   },
   "common": {
     "delete_discipline": "Remove discipline",
@@ -251,7 +259,8 @@
     "pdf_export": "Export PDF",
     "language_ru": "Russian",
     "language_en": "English",
-    "language_zh": "Chinese"
+    "language_zh": "Chinese",
+    "delete": "Delete"
   },
   "attributes_groups": {
     "physical": "PHYSICAL",
@@ -307,6 +316,7 @@
       "zero": "0",
       "wits": "Wits",
       "resolve": "Resolve",
+      "composure": "Composure",
       "stamina": "Stamina",
       "strength": "Strength",
       "dexterity": "Dexterity",

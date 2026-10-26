@@ -4,6 +4,7 @@ import { SheetPage1 } from './components/SheetPage1';
 import { SheetPage2 } from './components/SheetPage2';
 import { SheetPage3 } from './components/SheetPage3';
 import { SheetPage4 } from './components/SheetPage4';
+import { SheetPageInventory } from './components/SheetPageInventory';
 import { CharacterSelector } from './components/CharacterSelector';
 import i18n, { t } from './i18n';
 import { VAMPIRE_TYPES, CREATION_RULES } from './types';
@@ -23,6 +24,13 @@ function App() {
   const [isExporting, setIsExporting] = useState(false);
   const [pdfProgress, setPdfProgress] = useState({ current: 0, total: 0 });
   const isExportingRef = useRef(false);
+
+  // Классический режим экспорта PDF (светлая тема)
+  const [pdfClassicMode, setPdfClassicMode] = useState<boolean>(() => safeStorage.get('vtm6e-pdf-classic') !== 'false');
+
+  useEffect(() => {
+    safeStorage.set('vtm6e-pdf-classic', pdfClassicMode.toString());
+  }, [pdfClassicMode]);
 
   const { getActive, loadCharacter, loadCharacters, resetActiveCharacter, addPowerPage, history, pushHistory, clearHistory } = useCharacterStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -118,7 +126,7 @@ function App() {
     try {
       await exportAllPDFs(character.meta.name, (current, total) => {
         setPdfProgress({ current, total });
-      });
+      }, pdfClassicMode);
     } catch (err) {
       alert('Ошибка экспорта PDF: ' + (err as Error).message);
     } finally {
@@ -283,11 +291,23 @@ function App() {
             </button>
           </div>
 
-          {/* Group 4: PDF Export — accent button */}
-          <button className="icon-btn" style={{ position: 'relative', opacity: isExporting ? 0.5 : 1, cursor: isExporting ? 'not-allowed' : 'pointer' }} onClick={handleExportPdf} disabled={isExporting}>
-            <span style={{ position: 'absolute', top: '-6px', left: '50%', transform: 'translateX(-50%)', fontSize: '7px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', pointerEvents: 'none' }}>pdf</span>
-            <Download size={16} />
-          </button>
+          {/* Group 4: PDF Export + Classic checkbox */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 8px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', cursor: 'pointer', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }} title="Экспорт PDF в светлой (классической) теме">
+              <input
+                type="checkbox"
+                checked={pdfClassicMode}
+                onChange={e => setPdfClassicMode(e.target.checked)}
+                style={{ accentColor: 'var(--accent)', cursor: 'pointer', margin: 0, width: '14px', height: '14px' }}
+              />
+              Classic
+            </label>
+            
+            <button className="icon-btn" style={{ position: 'relative', opacity: isExporting ? 0.5 : 1, cursor: isExporting ? 'not-allowed' : 'pointer', padding: '4px' }} onClick={handleExportPdf} disabled={isExporting}>
+              <span style={{ position: 'absolute', top: '-6px', left: '50%', transform: 'translateX(-50%)', fontSize: '7px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', pointerEvents: 'none' }}>pdf</span>
+              <Download size={16} />
+            </button>
+          </div>
 
           {/* Group 5: Theme + Mobile menu */}
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -385,6 +405,7 @@ function App() {
           <SheetPage1 />
           <SheetPage2 />
           <SheetPage3 />
+          <SheetPageInventory />
 
           {character.powerPages?.map((page, idx) => (
             <SheetPage4 key={page.id} page={page} pageIndex={idx} />

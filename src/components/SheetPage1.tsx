@@ -30,7 +30,9 @@ const sheetStyle: React.CSSProperties = {
   padding: '10mm',
   border: '3px solid var(--border)',
   boxSizing: 'border-box',
-  fontFamily: "'Georgia', 'Times New Roman', serif"
+  fontFamily: "'Georgia', 'Times New Roman', serif",
+  display: 'flex',
+  flexDirection: 'column'
 };
 
 const inputStyle: React.CSSProperties = {
@@ -60,12 +62,17 @@ const sectionHeaderStyle: React.CSSProperties = {
 };
 
 const HeaderRow = ({
-  label, value, onChange, isDropdown, options, labelWidth = '110px'
+  label, value, onChange, isDropdown, options, labelWidth = '115px', prefix
 }: {
-  label: string; value: string; onChange: (v: string) => void; isDropdown?: boolean; options?: Array<{ id: string; label: string }>; labelWidth?: string;
+  label: string; value: string; onChange: (v: string) => void; isDropdown?: boolean; options?: Array<{ id: string; label: string }>; labelWidth?: string; prefix?: React.ReactNode;
 }) => (
-  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px', width: '100%', minWidth: 0 }}>
-    <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: "'Georgia', serif", width: labelWidth, flexShrink: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={label}>{label}:</span>
+  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', width: '100%', minWidth: 0 }}>
+    <div style={{ width: labelWidth, flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
+      {prefix}
+      <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: "'Georgia', serif", whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={label}>
+        {label}:
+      </span>
+    </div>
     <div style={{ flex: 1, minWidth: 0 }}>
       {isDropdown && options ? (
         <select value={value} onChange={(e) => onChange(e.target.value)} style={inputStyle}>
@@ -142,7 +149,8 @@ export const SheetPage1 = () => {
   return (
     <div id="character-sheet" className="sheet-page" style={{ ...sheetStyle, width: sheetWidth }}>
       {/* ===== 1. ШАПКА ===== */}
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '6px', marginBottom: '10px' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '10px' : '20px', marginBottom: '10px', flexShrink: 0 }}>
+        
         {/* Левая колонка */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <HeaderRow label={t('ui.name')} value={character.meta.name} onChange={(v) => updateMeta('name', v)} />
@@ -150,60 +158,66 @@ export const SheetPage1 = () => {
           <HeaderRow label={t('ui.true_age')} value={character.meta.trueAge} onChange={(v) => updateMeta('trueAge', v)} />
           <HeaderRow label={t('ui.embrace_date')} value={character.meta.embraceDate} onChange={(v) => updateMeta('embraceDate', v)} />
 
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
-             <input type="checkbox" checked={isCustomNostalgia} onChange={e => setIsCustomNostalgia(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
-             <div style={{ flex: 1, minWidth: 0 }}>
-               {isCustomNostalgia ? (
-                 <HeaderRow label={t('ui.nostalgia')} value={character.meta.nostalgia} onChange={(v) => updateMeta('nostalgia', v)} />
-               ) : (
-                 <HeaderRow label={t('ui.nostalgia')} value={character.meta.nostalgia} onChange={(v) => updateMeta('nostalgia', v)} isDropdown options={NOSTALGIA_DECADES} />
-               )}
-             </div>
-          </div>
+          <HeaderRow
+            label={t('ui.nostalgia')}
+            value={character.meta.nostalgia}
+            onChange={(v) => updateMeta('nostalgia', v)}
+            isDropdown={!isCustomNostalgia}
+            options={NOSTALGIA_DECADES}
+            prefix={
+              <input
+                type="checkbox"
+                checked={isCustomNostalgia}
+                onChange={e => setIsCustomNostalgia(e.target.checked)}
+                style={{ accentColor: 'var(--accent)', cursor: 'pointer', margin: 0 }}
+                title="Своя ностальгия"
+              />
+            }
+          />
 
           <HeaderRow label={t('ui.type')} value={character.meta.type} onChange={(v) => updateMeta('type', v)} isDropdown options={VAMPIRE_TYPES} />
         </div>
 
         {/* Центральная колонка — Анкх */}
         {!isMobile && (
-          <div style={{ width: '60px', flexShrink: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <span style={{ fontSize: '40px', lineHeight: 1, fontFamily: "'Georgia', serif" }}>†</span>
+          <div style={{ width: '30px', flexShrink: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <span style={{ fontSize: '36px', lineHeight: 1, fontFamily: "'Georgia', serif", color: 'var(--muted)' }}>†</span>
           </div>
         )}
 
         {/* Правая колонка */}
-        <div style={{ flex: 1.2, minWidth: 0 }}>
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
-             <input type="checkbox" checked={isCustomClan} onChange={e => setIsCustomClan(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
-             <div style={{ flex: 1, minWidth: 0 }}>
-               {isCustomClan ? (
-                 <HeaderRow label={t('ui.clan')} value={character.meta.clan} onChange={(v) => updateMeta('clan', v)} />
-               ) : (
-                 <HeaderRow label={t('ui.clan')} value={character.meta.clan} onChange={(v) => updateMeta('clan', v)} isDropdown options={CLANS_LIST} />
-               )}
-             </div>
-          </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <HeaderRow
+            label={t('ui.clan')}
+            value={character.meta.clan}
+            onChange={(v) => updateMeta('clan', v)}
+            isDropdown={!isCustomClan}
+            options={CLANS_LIST}
+            prefix={
+              <input
+                type="checkbox"
+                checked={isCustomClan}
+                onChange={e => setIsCustomClan(e.target.checked)}
+                style={{ accentColor: 'var(--accent)', cursor: 'pointer', margin: 0 }}
+                title="Свой клан"
+              />
+            }
+          />
           
           <HeaderRow label={t('ui.clan_bane')} value={character.meta.clanBane} onChange={(v) => updateMeta('clanBane', v)} />
           
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <HeaderRow label={t('ui.generation')} value={character.meta.generation} onChange={(v) => updateMeta('generation', v)} isDropdown options={GENERATION_OPTIONS.map(v => ({ id: v, label: v }))} labelWidth="75px" />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <HeaderRow label={t('ui.modifier')} value={character.meta.modifier} onChange={(v) => updateMeta('modifier', v)} labelWidth="85px" />
-            </div>
+          {/* Пара: Поколение и Модификатор */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '6px' }}>
+            <HeaderRow label={t('ui.generation')} value={character.meta.generation} onChange={(v) => updateMeta('generation', v)} isDropdown options={GENERATION_OPTIONS.map(v => ({ id: v, label: v }))} labelWidth="75px" />
+            <HeaderRow label={t('ui.modifier')} value={character.meta.modifier} onChange={(v) => updateMeta('modifier', v)} labelWidth="85px" />
           </div>
 
           <HeaderRow label={t('ui.archetype')} value={character.meta.archetype} onChange={(v) => updateMeta('archetype', v)} />
 
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <div style={{ flex: 1.2, minWidth: 0 }}>
-              <HeaderRow label={t('ui.sire')} value={character.meta.sire} onChange={(v) => updateMeta('sire', v)} labelWidth="40px" />
-            </div>
-            <div style={{ flex: 1.5, minWidth: 0 }}>
-              <HeaderRow label={t('ui.sire_type')} value={character.meta.sireType} onChange={(v) => updateMeta('sireType', v)} isDropdown options={SIRE_TYPES_LIST} labelWidth="50px" />
-            </div>
+          {/* Пара: Сир и Вид сира */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '8px', marginBottom: '6px' }}>
+            <HeaderRow label={t('ui.sire')} value={character.meta.sire} onChange={(v) => updateMeta('sire', v)} labelWidth="40px" />
+            <HeaderRow label={t('ui.sire_type')} value={character.meta.sireType} onChange={(v) => updateMeta('sireType', v)} isDropdown options={SIRE_TYPES_LIST} labelWidth="65px" />
           </div>
 
           <HeaderRow label={t('ui.sire_discipline')} value={character.meta.sireDiscipline} onChange={(v) => updateMeta('sireDiscipline', v)} isDropdown options={DISCIPLINES_LIST} />
@@ -211,37 +225,57 @@ export const SheetPage1 = () => {
       </div>
 
       {/* ===== 2. ХАРАКТЕРИСТИКИ ===== */}
-      <div style={{ border: `2px solid var(--border)`, marginBottom: '15px' }}>
+      <div style={{ border: `2px solid var(--border)`, marginBottom: '15px', flexShrink: 0 }}>
         <div style={{ background: 'var(--headerBg)', color: 'var(--header-text, var(--text))', display: 'flex', fontWeight: 'bold', fontSize: '11px', letterSpacing: '0.1em', fontFamily: "'Georgia', serif" }}>
-          {ATTR_GROUPS.map(g => (
-            <div key={g.key} style={{ flex: 1, textAlign: 'center', padding: '4px', borderLeft: `1px solid var(--border)` }}>{t(g.title)}</div>
+          {ATTR_GROUPS.map((g, gi) => (
+            <div
+              key={g.key}
+              style={{
+                flex: 1,
+                textAlign: 'center',
+                padding: '4px',
+                borderLeft: gi > 0 ? `1px solid var(--border)` : 'none'
+              }}
+            >
+              {t(g.title)}
+            </div>
           ))}
         </div>
         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row' }}>
           {ATTR_GROUPS.map((group, gi) => (
-            <div key={group.key} style={{ flex: 1, borderRight: !isMobile && gi < 2 ? `1px solid var(--border)` : 'none', borderBottom: isMobile ? `1px solid var(--border)` : 'none', padding: '5px', minWidth: 0, overflow: 'hidden' }}>
+            <div
+              key={group.key}
+              style={{
+                flex: 1,
+                borderRight: !isMobile && gi < 2 ? `1px solid var(--border)` : 'none',
+                borderBottom: isMobile ? `1px solid var(--border)` : 'none',
+                padding: '4px 2px',
+                minWidth: 0,
+                overflow: 'hidden'
+              }}
+            >
               {group.attrs.map(attr => (
                 <div key={attr} style={{ marginBottom: '4px' }}>
                   <div style={{ textAlign: 'center', fontSize: '11px', marginBottom: '4px', fontWeight: 'bold', fontFamily: "'Georgia', serif" }}>{t(ATTR_LABELS[attr])}</div>
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px' }}>
-                    <div style={{ display: 'flex', gap: '2px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '3px' }}>
+                    <div style={{ display: 'flex', gap: '1px' }}>
                       {Array.from({ length: 5 }).map((_, i) => {
                         const pos = i + 1;
                         const val = character.attributes[group.key][attr as keyof typeof character.attributes[typeof group.key]];
                         const isFilled = pos <= val;
                         return (
-                          <button key={`a-${i}`} onClick={() => updateAttribute(group.key, attr, pos === val ? 0 : pos)} style={{ width: '16px', height: '16px', background: isFilled ? 'var(--dot-color)' : 'transparent', border: `1px solid ${isFilled ? 'var(--dot-color)' : 'var(--border)'}`, borderRadius: '50%', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
+                          <button key={`a-${i}`} onClick={() => updateAttribute(group.key, attr, pos === val ? 0 : pos)} style={{ width: '15px', height: '15px', background: isFilled ? 'var(--dot-color)' : 'transparent', border: `1px solid ${isFilled ? 'var(--dot-color)' : 'var(--border)'}`, borderRadius: '50%', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
                         );
                       })}
                     </div>
-                    <div style={{ display: 'flex', gap: '2px' }}>
+                    <div style={{ display: 'flex', gap: '1px' }}>
                       {Array.from({ length: 5 }).map((_, i) => {
                         const pos = i + 6;
                         const val = character.attributes[group.key][attr as keyof typeof character.attributes[typeof group.key]];
                         const isFilled = pos <= val;
                         const isThreshold = pos >= 6;
                         return (
-                          <button key={`b-${i}`} onClick={() => updateAttribute(group.key, attr, pos === val ? 0 : pos)} style={{ width: '16px', height: '16px', background: isFilled ? (isThreshold ? 'var(--accent)' : 'var(--dot-color)') : 'transparent', border: `1px solid ${isFilled ? (isThreshold ? 'var(--accent)' : 'var(--dot-color)') : 'var(--border)'}`, borderRadius: '50%', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
+                          <button key={`b-${i}`} onClick={() => updateAttribute(group.key, attr, pos === val ? 0 : pos)} style={{ width: '15px', height: '15px', background: isFilled ? (isThreshold ? 'var(--accent)' : 'var(--dot-color)') : 'transparent', border: `1px solid ${isFilled ? (isThreshold ? 'var(--accent)' : 'var(--dot-color)') : 'var(--border)'}`, borderRadius: '50%', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
                         );
                       })}
                     </div>
@@ -254,7 +288,7 @@ export const SheetPage1 = () => {
       </div>
 
       {/* ===== 3. ВИТЭ И ВОЛЯ ===== */}
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '10px' : '20px', marginBottom: '15px', borderBottom: `2px solid var(--border)`, paddingBottom: '15px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '10px' : '20px', marginBottom: '15px', borderBottom: `2px solid var(--border)`, paddingBottom: '15px', alignItems: 'center', flexShrink: 0 }}>
         <div style={{ flex: 1, width: '100%' }}>
           <PowerDisplay label={t('ui.vitae')} current={character.vitae.current} max={character.vitae.max} onChange={(v) => updateVitae(v)} size={14} />
         </div>
@@ -264,7 +298,7 @@ export const SheetPage1 = () => {
       </div>
 
       {/* ===== 4. УСКОРЕНИЕ ===== */}
-      <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '10px', flexShrink: 0 }}>
         <div style={{ fontWeight: 'bold', fontSize: '12px', letterSpacing: '0.1em', fontFamily: "'Georgia', serif" }}>{t('ui.blood_surge')}</div>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
           <DotRating total={5} value={character.bloodSurge} onChange={(v) => updateBloodSurge(v)} />
@@ -272,105 +306,141 @@ export const SheetPage1 = () => {
       </div>
 
       {/* ===== 5. ШКАЛА ЧЕЛОВЕЧНОСТИ ===== */}
-      <HumanityTracker />
+      <div style={{ flexShrink: 0 }}>
+        <HumanityTracker />
+      </div>
 
       {/* ===== 6. НАВЫКИ ===== */}
-      <div style={{ marginBottom: '15px', border: '1px solid var(--border)', padding: '4px' }}>
-        <div style={sectionHeaderStyle}>{t('ui.skills')}</div>
-        {SKILLS_LIST.map(skill => (
-          <div key={skill.id} style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--border)', width: '100%' }}>
-            <div style={{ fontSize: '11px', fontFamily: "'Georgia', serif", width: isMobile ? '80px' : '160px', flexShrink: 0 }}>{t(skill.label)}</div>
-            <div style={{ width: isMobile ? '60px' : '110px', flexShrink: 0 }}>
-              <DotRating total={5} size={12} value={character.skills[skill.id]?.dots || 0} onChange={(v) => updateSkill(skill.id, v)} />
+      <div style={{ marginBottom: '15px', border: '1px solid var(--border)', padding: '0', flexShrink: 0, overflow: 'hidden' }}>
+        <div style={{ ...sectionHeaderStyle, margin: 0, padding: '6px', borderBottom: '1px solid var(--border)' }}>{t('ui.skills')}</div>
+        
+        {SKILLS_LIST.map((skill, sIdx) => {
+          const isEven = sIdx % 2 === 0;
+          return (
+            <div
+              key={skill.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                width: '100%',
+                backgroundColor: isEven ? 'var(--bg)' : 'var(--headerBg)',
+                borderBottom: sIdx < SKILLS_LIST.length - 1 ? '1px solid var(--border)' : 'none',
+                padding: '4px 8px',
+                boxSizing: 'border-box'
+              }}
+            >
+              <div style={{ fontSize: '11px', fontFamily: "'Georgia', serif", width: isMobile ? '80px' : '150px', flexShrink: 0, fontWeight: 'bold' }}>
+                {t(skill.label)}
+              </div>
+              
+              <div style={{ width: isMobile ? '60px' : '110px', flexShrink: 0 }}>
+                <DotRating total={5} size={12} value={character.skills[skill.id]?.dots || 0} onChange={(v) => updateSkill(skill.id, v)} />
+              </div>
+              
+              <div style={{ display: 'flex', flex: 1, minWidth: 0, gap: '6px' }}>
+                {[0, 1, 2].map((idx) => (
+                  <input
+                    key={idx}
+                    type="text"
+                    value={character.skills[skill.id]?.specifications?.[idx] || ''}
+                    onChange={(e) => updateSpecification(skill.id, idx as 0 | 1 | 2, e.target.value)}
+                    placeholder="—"
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      background: 'var(--input-bg)',
+                      border: '1px solid transparent',
+                      borderRadius: '3px',
+                      outline: 'none',
+                      padding: '3px 6px',
+                      fontSize: '10px',
+                      color: 'var(--text)',
+                      fontFamily: "'Georgia', serif",
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                    onBlur={(e) => e.target.style.borderColor = 'transparent'}
+                  />
+                ))}
+              </div>
             </div>
-            <div style={{ display: 'flex', flex: 1, minWidth: 0, gap: '4px' }}>
-              {[0, 1, 2].map((idx) => (
-                <input
-                  key={idx}
-                  type="text"
-                  value={character.skills[skill.id]?.specifications?.[idx] || ''}
-                  onChange={(e) => updateSpecification(skill.id, idx as 0 | 1 | 2, e.target.value)}
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    background: 'transparent',
-                    border: 'none',
-                    borderBottom: `1px dashed var(--border)`,
-                    outline: 'none',
-                    padding: '2px 4px',
-                    fontSize: '10px',
-                    color: 'var(--text)',
-                    fontFamily: "'Georgia', serif"
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* ===== 7. РЕСУРСЫ + ПРЕДМЕТЫ ===== */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '15px', flexDirection: isMobile ? 'column' : 'row' }}>
-        <div style={{ flex: 3, minWidth: 0 }}>
+      <div style={{ display: 'flex', gap: '16px', flexDirection: isMobile ? 'column' : 'row', flex: 1, minHeight: 0, alignItems: 'stretch' }}>
+        
+        {/* РЕСУРСЫ */}
+        <div style={{ flex: 3, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0 }}>
           <div style={{ ...sectionHeaderStyle, textAlign: 'center' }}>{t('ui.resources')}</div>
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '3px' }}>
-              <input
-                type="text"
-                value={character.resources[i]?.name || ''}
-                onChange={(e) => useCharacterStore.getState().updateResource(i, 'name', e.target.value)}
-                style={{ ...inputStyle, width: '90px', flexShrink: 0 }}
-              />
-              <div style={{ width: '80px', flexShrink: 0 }}>
-                <DotRating total={5} value={character.resources[i]?.dots || 0} onChange={(v) => useCharacterStore.getState().updateResource(i, 'dots', v)} size={12} />
+          
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  value={character.resources[i]?.name || ''}
+                  onChange={(e) => useCharacterStore.getState().updateResource(i, 'name', e.target.value)}
+                  style={{ ...inputStyle, width: '150px', flexShrink: 0 }}
+                />
+                <div style={{ width: '80px', flexShrink: 0 }}>
+                  <DotRating total={5} value={character.resources[i]?.dots || 0} onChange={(v) => useCharacterStore.getState().updateResource(i, 'dots', v)} size={12} />
+                </div>
+                <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
+                  {Array.from({ length: 5 }).map((_, si) => {
+                    const currentSquares = character.resources[i]?.squares || 0;
+                    const isFilled = currentSquares >= si + 1;
+                    return (
+                      <button
+                        key={si}
+                        onClick={() => {
+                          const newVal = (si + 1 === currentSquares) ? 0 : (si + 1);
+                          useCharacterStore.getState().updateResource(i, 'squares', newVal);
+                        }}
+                        style={{
+                          width: '12px', height: '12px',
+                          background: isFilled ? 'var(--dot-color)' : 'transparent',
+                          border: `1px solid var(--border)`,
+                          borderRadius: '0',
+                          cursor: 'pointer',
+                          padding: 0,
+                        }}
+                      />
+                    );
+                  })}
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
-                {Array.from({ length: 5 }).map((_, si) => {
-                  const currentSquares = character.resources[i]?.squares || 0;
-                  const isFilled = currentSquares >= si + 1;
-                  return (
-                    <button
-                      key={si}
-                      onClick={() => {
-                        const newVal = (si + 1 === currentSquares) ? 0 : (si + 1);
-                        useCharacterStore.getState().updateResource(i, 'squares', newVal);
-                      }}
-                      style={{
-                        width: '12px', height: '12px',
-                        background: isFilled ? 'var(--dot-color)' : 'transparent',
-                        border: `1px solid var(--border)`,
-                        borderRadius: '0',
-                        cursor: 'pointer',
-                        padding: 0,
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-        <div style={{ flex: 2, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+
+        {/* ПРЕДМЕТЫ */}
+        <div style={{ flex: 2, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0 }}>
           <div style={{ ...sectionHeaderStyle, textAlign: 'center' }}>{t('ui.items')}</div>
-          <textarea
-            value={character.items}
-            onChange={(e) => useCharacterStore.getState().updateField('items', e.target.value)}
-            placeholder={t('placeholders.items')}
-            style={{
-              flex: 1,
-              background: 'var(--input-bg)',
-              border: `1px solid var(--border)`,
-              outline: 'none',
-              padding: '8px',
-              fontSize: '12px',
-              color: 'var(--text)',
-              fontFamily: "'Georgia', serif",
-              resize: 'none',
-              width: '100%',
-              boxSizing: 'border-box',
-              minHeight: '120px'
-            }}
-          />
+          
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <textarea
+              value={character.items}
+              onChange={(e) => useCharacterStore.getState().updateField('items', e.target.value)}
+              placeholder={t('placeholders.items')}
+              style={{
+                flex: 1,
+                height: '100%',
+                background: 'var(--input-bg)',
+                border: `1px solid var(--border)`,
+                outline: 'none',
+                padding: '8px',
+                fontSize: '12px',
+                color: 'var(--text)',
+                fontFamily: "'Georgia', serif",
+                resize: 'none',
+                width: '100%',
+                boxSizing: 'border-box',
+                minHeight: 0
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { toCanvas } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { CharacterSheet } from '../types';
+import { THEMES } from '../themes';
 
 const sanitizeName = (name: string) =>
   (name || 'Character')
@@ -53,11 +54,10 @@ const getThemeBg = (): string => {
   return v || '#ffffff';
 };
 
-const renderPageToCanvas = async (elementId: string): Promise<HTMLCanvasElement | null> => {
+const renderPageToCanvas = async (elementId: string, forceClassic: boolean): Promise<HTMLCanvasElement | null> => {
   const original = document.getElementById(elementId);
   if (!original) return null;
 
-  const bgColor = getThemeBg();
   const width = 794;
   const height = 1123;
 
@@ -66,6 +66,24 @@ const renderPageToCanvas = async (elementId: string): Promise<HTMLCanvasElement 
   document.body.appendChild(container);
 
   const clone = original.cloneNode(true) as HTMLElement;
+
+  // ПРИМЕНЯЕМ КЛАССИЧЕСКУЮ ТЕМУ (если включено)
+  if (forceClassic) {
+    const classic = THEMES.find(t => t.id === 'classic')!;
+    clone.style.setProperty('--bg', classic.bg);
+    clone.style.setProperty('--text', classic.text);
+    clone.style.setProperty('--panel', classic.panel);
+    clone.style.setProperty('--muted', classic.muted);
+    clone.style.setProperty('--accent', classic.accent);
+    clone.style.setProperty('--border', classic.border);
+    clone.style.setProperty('--header-bg', classic.headerBg);
+    clone.style.setProperty('--header-text', classic.headerText);
+    clone.style.setProperty('--dot-color', classic.dotColor);
+    clone.style.setProperty('--card-border', classic.cardBorder);
+    clone.style.setProperty('--input-bg', classic.inputBg);
+  }
+
+  const bgColor = forceClassic ? '#ffffff' : getThemeBg();
 
   // ВАЖНО: Синхронизация ДО удаления .no-print
   const origInputs = original.querySelectorAll('input, textarea, select');
@@ -170,7 +188,8 @@ const renderPageToCanvas = async (elementId: string): Promise<HTMLCanvasElement 
 
 export const exportAllPDFs = async (
   charName: string,
-  onProgress?: (current: number, total: number) => void
+  onProgress?: (current: number, total: number) => void,
+  forceClassic: boolean = false
 ) => {
   try {
     const sheetElements = Array.from(document.querySelectorAll<HTMLElement>('.sheet-page'));
@@ -181,7 +200,7 @@ export const exportAllPDFs = async (
 
     for (let i = 0; i < total; i++) {
       const el = sheetElements[i];
-      canvases.push(await renderPageToCanvas(el.id));
+      canvases.push(await renderPageToCanvas(el.id, forceClassic));
       if (onProgress) onProgress(i + 1, total);
     }
 

@@ -55,7 +55,12 @@
     "confirm_delete_page": "Удалить эту страницу со всеми карточками?",
     "layout": "Вместимость",
     "font_size": "Шрифт",
-    "cards": "карт."
+    "cards": "карт.",
+    "inventory": "Инвентарь",
+    "item_name": "Название",
+    "item_qty": "Кол-во",
+    "item_desc": "Описание",
+    "add_item": "Добавить предмет"
   },
   "attributes": {
     "strength": "Сила",
@@ -235,7 +240,10 @@
     "power": "Способность...",
     "clear_sheet": "Очистить лист?",
     "delete_character": "Удалить персонаж?",
-    "biography": "История персонажа..."
+    "biography": "История персонажа...",
+    "item_name": "Название предмета...",
+    "item_desc": "Свойства, вес, заметки...",
+    "empty_inventory": "Инвентарь пуст. Добавьте первый предмет."
   },
   "common": {
     "delete_discipline": "Удалить дисциплину",
@@ -251,7 +259,8 @@
     "pdf_export": "Экспорт PDF",
     "language_ru": "Русский",
     "language_en": "English",
-    "language_zh": "中文"
+    "language_zh": "中文",
+    "delete": "Удалить"
   },
   "attributes_groups": {
     "physical": "ФИЗИЧЕСКИЕ",
@@ -307,6 +316,7 @@
       "zero": "0",
       "wits": "Смекалка",
       "resolve": "Упорство",
+      "composure": "Самообладание",
       "stamina": "Выносливость",
       "strength": "Сила",
       "dexterity": "Ловкость",
