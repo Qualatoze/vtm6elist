@@ -236,35 +236,35 @@ const syncClanAndSireDisciplines = (
   const oldSireDiscs = SIRE_TYPE_TO_DISCIPLINES[oldSireType] || [];
   const newSireDiscs = SIRE_TYPE_TO_DISCIPLINES[newSireType] || [];
 
-  // Что нужно удалить (было в старом, нет в новом)
+  // 1. Вычисляем, какие дисциплины нужно удалить (были у старого клана/сира, но нет у нового)
   const toRemove = [...oldClanDiscs, ...oldSireDiscs].filter(d => !newClanDiscs.includes(d) && !newSireDiscs.includes(d));
   
-  // Что нужно добавить (есть в новом, не было в старом)
-  const toAdd = [...newClanDiscs, ...newSireDiscs].filter(d => !oldClanDiscs.includes(d) && !oldSireDiscs.includes(d));
-
-  // 1. Удаляем старые дисциплины, если они пустые (юзер ничего не вложил)
+  // Удаляем только пустые дисциплины (если юзер не вкладывал в них точки)
   newChar.disciplines = newChar.disciplines.filter(d => {
     if (toRemove.includes(normalizeId(d.name))) {
       const isEmpty = d.dots === 0 && (!d.powersList || d.powersList.every(p => !p));
-      if (isEmpty) return false; // удаляем
+      if (isEmpty) return false;
     }
     return true;
   });
 
-  // 2. Удаляем карточки этих дисциплин
+  // 2. Удаляем карточки удалённых дисциплин с листа
   newChar.powerPages = newChar.powerPages.map(page => ({
     ...page,
     cards: page.cards.map(card => {
       if (card && toRemove.includes(card.disciplineId)) {
         const discStillExists = newChar.disciplines.some(d => normalizeId(d.name) === card.disciplineId);
-        if (!discStillExists) return null; // удаляем карточку
+        if (!discStillExists) return null;
       }
       return card;
     }).filter((c): c is DisciplineCard => c !== null)
   }));
 
-  // 3. Добавляем новые дисциплины
-  toAdd.forEach(discId => {
+  // 3. Собираем список ВСЕХ дисциплин, которые ОБЯЗАНЫ быть (от нового клана + нового сира)
+  const requiredDiscs = [...newClanDiscs, ...newSireDiscs];
+  
+  // Проверяем каждую обязательную дисциплину и добавляем, если её нет в листе
+  requiredDiscs.forEach(discId => {
     const exists = newChar.disciplines.some(d => normalizeId(d.name) === discId);
     if (!exists && newChar.disciplines.length < 16) {
       newChar.disciplines.push({
@@ -276,14 +276,14 @@ const syncClanAndSireDisciplines = (
     }
   });
 
-  // 4. Добавляем новые карточки для них
+  // 4. Гарантируем наличие карточек для этих дисциплин
   if (newChar.powerPages.length === 0) {
     newChar.powerPages.push({ id: crypto.randomUUID(), layout: 4, fontSize: 11, cards: [] });
   }
   let page = { ...newChar.powerPages[0] };
   let cards = [...(page.cards || [])];
 
-  toAdd.forEach(discId => {
+  requiredDiscs.forEach(discId => {
     const cardExists = cards.some(c => c && c.disciplineId === discId);
     if (!cardExists) {
       let emptyIdx = cards.findIndex(c => !c);
