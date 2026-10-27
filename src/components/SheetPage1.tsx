@@ -5,6 +5,8 @@ import { SKILLS_LIST, NOSTALGIA_DECADES, VAMPIRE_TYPES, CLANS_LIST, SIRE_TYPES_L
 import { DotRating } from './DotRating';
 import { HumanityTracker } from './HumanityTracker';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { Tooltip } from './Tooltip';
+import { TOOLTIPS } from '../data/tooltips';
 
 const ATTR_GROUPS = [
   { key: 'physical' as const, title: 'attributes_groups.physical', attrs: ['strength', 'dexterity', 'stamina'] },
@@ -127,7 +129,7 @@ const PowerDisplay = ({ label, current, max, onChange, size = 14 }: { label: str
   );
 };
 
-export const SheetPage1 = () => {
+export const SheetPage1 = ({ showTips }: { showTips?: boolean }) => {
   const character = useCharacterStore(s => s.getActive());
   const { updateMeta, updateAttribute, updateSkill, updateSpecification, updateVitae, updateWillpower, updateBloodSurge } = useCharacterStore();
   const isMobile = useIsMobile();
@@ -165,13 +167,16 @@ export const SheetPage1 = () => {
             isDropdown={!isCustomNostalgia}
             options={NOSTALGIA_DECADES}
             prefix={
-              <input
-                type="checkbox"
-                checked={isCustomNostalgia}
-                onChange={e => setIsCustomNostalgia(e.target.checked)}
-                style={{ accentColor: 'var(--accent)', cursor: 'pointer', margin: 0 }}
-                title="Своя ностальгия"
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                <input
+                  type="checkbox"
+                  checked={isCustomNostalgia}
+                  onChange={e => setIsCustomNostalgia(e.target.checked)}
+                  style={{ accentColor: 'var(--accent)', cursor: 'pointer', margin: 0 }}
+                  title="Своя ностальгия"
+                />
+                <Tooltip text={TOOLTIPS.nostalgia} showTips={!!showTips} />
+              </div>
             }
           />
 
@@ -237,7 +242,10 @@ export const SheetPage1 = () => {
                 borderLeft: gi > 0 ? `1px solid var(--border)` : 'none'
               }}
             >
-              {t(g.title)}
+              <span style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                {t(g.title)}
+                <Tooltip text={TOOLTIPS.attributes} showTips={!!showTips} />
+              </span>
             </div>
           ))}
         </div>
@@ -289,17 +297,29 @@ export const SheetPage1 = () => {
 
       {/* ===== 3. ВИТЭ И ВОЛЯ ===== */}
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '10px' : '20px', marginBottom: '15px', borderBottom: `2px solid var(--border)`, paddingBottom: '15px', alignItems: 'center', flexShrink: 0 }}>
-        <div style={{ flex: 1, width: '100%' }}>
-          <PowerDisplay label={t('ui.vitae')} current={character.vitae.current} max={character.vitae.max} onChange={(v) => updateVitae(v)} size={14} />
+        <div style={{ flex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+            <span style={{ fontWeight: 'bold', fontSize: '13px', fontFamily: "'Georgia', serif" }}>{t('ui.vitae')}</span>
+            <Tooltip text={TOOLTIPS.vitae} showTips={!!showTips} />
+          </div>
+          <PowerDisplay label="" current={character.vitae.current} max={character.vitae.max} onChange={(v) => updateVitae(v)} size={14} />
         </div>
-        <div style={{ flex: 1, width: '100%' }}>
-          <PowerDisplay label={t('ui.willpower')} current={character.willpower.current} max={character.willpower.max} onChange={(v) => updateWillpower(v)} size={13} />
+
+        <div style={{ flex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+            <span style={{ fontWeight: 'bold', fontSize: '13px', fontFamily: "'Georgia', serif" }}>{t('ui.willpower')}</span>
+            <Tooltip text={TOOLTIPS.willpower} showTips={!!showTips} />
+          </div>
+          <PowerDisplay label="" current={character.willpower.current} max={character.willpower.max} onChange={(v) => updateWillpower(v)} size={13} />
         </div>
       </div>
 
       {/* ===== 4. УСКОРЕНИЕ ===== */}
       <div style={{ textAlign: 'center', marginBottom: '10px', flexShrink: 0 }}>
-        <div style={{ fontWeight: 'bold', fontSize: '12px', letterSpacing: '0.1em', fontFamily: "'Georgia', serif" }}>{t('ui.blood_surge')}</div>
+        <div style={{ fontWeight: 'bold', fontSize: '12px', letterSpacing: '0.1em', fontFamily: "'Georgia', serif", display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          {t('ui.blood_surge')}
+          <Tooltip text={TOOLTIPS.bloodSurge} showTips={!!showTips} />
+        </div>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
           <DotRating total={5} value={character.bloodSurge} onChange={(v) => updateBloodSurge(v)} />
         </div>
@@ -307,12 +327,29 @@ export const SheetPage1 = () => {
 
       {/* ===== 5. ШКАЛА ЧЕЛОВЕЧНОСТИ ===== */}
       <div style={{ flexShrink: 0 }}>
-        <HumanityTracker />
+        <HumanityTracker showTips={showTips} />
       </div>
 
       {/* ===== 6. НАВЫКИ ===== */}
       <div style={{ marginBottom: '15px', border: '1px solid var(--border)', padding: '0', flexShrink: 0, overflow: 'hidden' }}>
-        <div style={{ ...sectionHeaderStyle, margin: 0, padding: '6px', borderBottom: '1px solid var(--border)' }}>{t('ui.skills')}</div>
+        <div style={{
+          ...sectionHeaderStyle,
+          margin: 0,
+          padding: '6px',
+          borderBottom: '1px solid var(--border)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '4px'
+        }}>
+          {t('ui.skills')}
+          <Tooltip
+            text={TOOLTIPS.skills}
+            showTips={!!showTips}
+            position="bottom"
+            iconSize={12}
+          />
+        </div>
         
         {SKILLS_LIST.map((skill, sIdx) => {
           const isEven = sIdx % 2 === 0;

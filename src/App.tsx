@@ -11,12 +11,17 @@ import { VAMPIRE_TYPES, CREATION_RULES } from './types';
 import { exportJSON, importJSONFile, exportAllPDFs } from './utils/exportImport';
 import { safeStorage } from './utils/storage';
 import { THEMES, DEFAULT_THEME_ID } from './themes';
-import { Download, Upload, FileJson, RotateCcw, Menu, X, Send, BookOpen, Globe, History as HistoryIcon } from 'lucide-react';
+import { Download, Upload, FileJson, RotateCcw, Menu, X, Send, BookOpen, Globe, History as HistoryIcon, HelpCircle } from 'lucide-react';
 
 function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [themeId, setThemeId] = useState<string>(() => safeStorage.get('vtm6e-theme') || DEFAULT_THEME_ID);
   const [lang, setLang] = useState<string>(() => safeStorage.get('vtm6e-lang') || 'ru');
+  const [showTips, setShowTips] = useState<boolean>(() => safeStorage.get('vtm6e-tips') !== 'false');
+  useEffect(() => {
+    safeStorage.set('vtm6e-tips', showTips.toString());
+  }, [showTips]);
+
   const [showSummary, setShowSummary] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
   
@@ -273,6 +278,10 @@ function App() {
 
           {/* Group 3: Tools */}
           <div style={{ display: 'flex', gap: '8px' }}>
+            <button className="icon-btn" onClick={() => setShowTips(!showTips)} title="Вкл/Выкл подсказки" style={{ position: 'relative', color: showTips ? 'var(--accent)' : 'var(--muted)' }}>
+              <span style={{ position: 'absolute', top: '-6px', left: '50%', transform: 'translateX(-50%)', fontSize: '7px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', pointerEvents: 'none' }}>tips</span>
+              <HelpCircle size={16} />
+            </button>
             <button className="icon-btn" onClick={() => setShowSummary(!showSummary)} title={t('common.summary_rules')} style={{ position: 'relative' }}>
               <span style={{ position: 'absolute', top: '-6px', left: '50%', transform: 'translateX(-50%)', fontSize: '7px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', pointerEvents: 'none' }}>rule</span>
               <BookOpen size={16} />
@@ -402,7 +411,7 @@ function App() {
       {/* MAIN CONTENT */}
       <main id="main-content" className="flex-1 p-2 md:p-6 pb-20 md:pb-6 overflow-x-hidden">
         <div style={{ width: '100%', maxWidth: '210mm', margin: '0 auto' }}>
-          <SheetPage1 />
+          <SheetPage1 showTips={showTips} />
           <SheetPage2 />
           <SheetPage3 />
           <SheetPageInventory />

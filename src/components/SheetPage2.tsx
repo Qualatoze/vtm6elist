@@ -30,7 +30,7 @@ const sheetStyle: React.CSSProperties = {
 
 const MAX_DISCIPLINES = 16;
 
-export const SheetPage2 = () => {
+export const SheetPage2 = ({ showTips }: { showTips?: boolean }) => {
   const { t } = useTranslation();
   const character = useCharacterStore(s => s.getActive());
   const { updateField, updateNested, addDiscipline, updateDiscipline, updateDisciplinePower, removeDiscipline, updateLifePath, applyLifePath } = useCharacterStore();

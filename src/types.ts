@@ -41,6 +41,7 @@ export interface CharacterSheet {
   skills: Record<string, { dots: number; specifications: [string, string, string] }>;
   resources: Array<{ name: string; dots: number; squares: number; notes: string }>;
   items: string;
+  inventoryText: string;   // <-- новое поле
   notes: string;
   biography: string;
   disciplines: Array<{

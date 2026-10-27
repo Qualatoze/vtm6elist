@@ -40,6 +40,7 @@ export const createEmptyCharacter = (): CharacterSheet => ({
   resources: [{ name: t('resources.wealth'), dots: 0, squares: 0, notes: '' }],
   items: '',
   inventory: [],
+  inventoryText: '',       // <-- новое поле
   disciplines: [],
   lifePaths: [], clanTraits: '', merits: '', flaws: '', notes: '', biography: '',
   nature: { indulgence: '', flash: '' },
@@ -201,6 +202,24 @@ const normalizeCharacter = (c: CharacterSheet): CharacterSheet => {
     lifePaths: c.lifePaths || [],
     resources: c.resources || [],
     inventory: Array.isArray(c.inventory) ? c.inventory : [],
+
+    // Миграция: если old inventory (массив) есть, а inventoryText нет — конвертируем в строку
+    inventoryText: c.inventoryText ?? (
+      Array.isArray(c.inventory)
+        ? c.inventory
+            .map(i => {
+              if (!i) return '';
+              const name = i.name?.trim() || '';
+              if (!name) return '';
+              const qty = i.qty ? ` (${i.qty})` : '';
+              const desc = i.description?.trim() ? `: ${i.description.trim()}` : '';
+              return `${name}${qty}${desc}`;
+            })
+            .filter(Boolean)
+            .join('\n')
+        : ''
+    ),
+
     appliedLifePaths: c.appliedLifePaths || [null, null, null, null, null, null, null, null],
     powerPages: Array.isArray(c.powerPages) && c.powerPages.length > 0
       ? c.powerPages.map(page => ({

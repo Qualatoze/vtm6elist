@@ -18,7 +18,7 @@ const sheetStyle: React.CSSProperties = {
   flexDirection: 'column',
 };
 
-export const SheetPage3 = () => {
+export const SheetPage3 = ({ showTips }: { showTips?: boolean }) => {
   const { t } = useTranslation();
   const character = useCharacterStore(s => s.getActive());
   const updateField = useCharacterStore(s => s.updateField);

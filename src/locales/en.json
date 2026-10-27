@@ -241,6 +241,7 @@
     "clear_sheet": "Clear sheet?",
     "delete_character": "Delete character?",
     "biography": "Character history...",
+    "inventory": "Inventory, gear, items...",
     "item_name": "Item name...",
     "item_desc": "Properties, weight, notes...",
     "empty_inventory": "Inventory is empty. Add your first item."
