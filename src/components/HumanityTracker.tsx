@@ -49,7 +49,7 @@ export const HumanityTracker = ({ showTips }: { showTips?: boolean }) => {
   const { t } = useTranslation();
 
   return (
-    <div style={{ marginBottom: '15px' }}>
+    <div style={{ marginBottom: '8px' }}>
       <div style={{ fontWeight: 'bold', fontSize: '12px', letterSpacing: '0.1em', textAlign: 'center', fontFamily: "'Georgia', serif", marginBottom: '6px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         {t('ui.humanity_scale')}
         <Tooltip text={TOOLTIPS.humanityScale} showTips={!!showTips} />

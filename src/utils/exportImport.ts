@@ -59,7 +59,6 @@ const renderPageToCanvas = async (elementId: string, forceClassic: boolean): Pro
   if (!original) return null;
 
   const width = 794;
-  const height = 1123;
 
   const container = document.createElement('div');
   container.style.cssText = `position:fixed;top:0;left:-9999px;width:${width}px;z-index:-9999;`;
@@ -107,15 +106,15 @@ const renderPageToCanvas = async (elementId: string, forceClassic: boolean): Pro
 
   Object.assign(clone.style, {
     width: `${width}px`,
-    height: `${height}px`,
-    minHeight: `${height}px`,
-    maxHeight: `${height}px`,
+    height: 'auto',
+    minHeight: 'auto',
+    maxHeight: 'none',
     margin: '0',
     padding: '37.8px',
     border: 'none',
     boxSizing: 'border-box',
     backgroundColor: bgColor,
-    overflow: 'hidden',
+    overflow: 'visible',
   });
 
   container.appendChild(clone);
@@ -173,13 +172,16 @@ const renderPageToCanvas = async (elementId: string, forceClassic: boolean): Pro
 
   try {
     await document.fonts.ready;
-    void clone.offsetHeight;
+    void clone.offsetHeight; // Форсируем перерасчет
+
+    // Замеряем реальную высоту отрендеренного блока
+    const actualHeight = Math.ceil(clone.getBoundingClientRect().height);
 
     return await toCanvas(clone, {
-      pixelRatio: 2,
+      pixelRatio: 3,
       backgroundColor: bgColor,
       width,
-      height,
+      height: actualHeight,
     });
   } finally {
     document.body.removeChild(container);
@@ -213,7 +215,23 @@ export const exportAllPDFs = async (
 
     valid.forEach((canvas, idx) => {
       if (idx > 0) pdf.addPage();
-      pdf.addImage(canvas.toDataURL('image/jpeg', 0.85), 'JPEG', 0, 0, pdfW, pdfH);
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+      // Рассчитываем пропорции, чтобы картинка влезла целиком
+      const canvasW = canvas.width;
+      const canvasH = canvas.height;
+      const scale = Math.min(pdfW / canvasW, pdfH / canvasH);
+
+      const renderW = canvasW * scale;
+      const renderH = canvasH * scale;
+
+      // Центрируем по горизонтали, прижимаем к верху по вертикали
+      const offsetX = (pdfW - renderW) / 2;
+      const offsetY = 0;
+
+      pdf.addImage(imgData, 'JPEG', offsetX, offsetY, renderW, renderH);
+
       canvas.width = 0;
       canvas.height = 0;
     });

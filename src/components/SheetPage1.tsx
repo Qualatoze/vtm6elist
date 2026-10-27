@@ -29,7 +29,7 @@ const sheetStyle: React.CSSProperties = {
   backgroundColor: 'var(--bg)',
   color: 'var(--text)',
   margin: '0 auto',
-  padding: '10mm',
+  padding: '6mm',
   border: '3px solid var(--border)',
   boxSizing: 'border-box',
   fontFamily: "'Georgia', 'Times New Roman', serif",
@@ -68,7 +68,7 @@ const HeaderRow = ({
 }: {
   label: string; value: string; onChange: (v: string) => void; isDropdown?: boolean; options?: Array<{ id: string; label: string }>; labelWidth?: string; prefix?: React.ReactNode;
 }) => (
-  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '6px', width: '100%', minWidth: 0 }}>
+  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px', width: '100%', minWidth: 0 }}>
     <div style={{ width: labelWidth, flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
       {prefix}
       <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: "'Georgia', serif", whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={label}>
@@ -230,7 +230,7 @@ export const SheetPage1 = ({ showTips }: { showTips?: boolean }) => {
       </div>
 
       {/* ===== 2. ХАРАКТЕРИСТИКИ ===== */}
-      <div style={{ border: `2px solid var(--border)`, marginBottom: '15px', flexShrink: 0 }}>
+      <div style={{ border: `2px solid var(--border)`, marginBottom: '8px', flexShrink: 0 }}>
         <div style={{ background: 'var(--headerBg)', color: 'var(--header-text, var(--text))', display: 'flex', fontWeight: 'bold', fontSize: '11px', letterSpacing: '0.1em', fontFamily: "'Georgia', serif" }}>
           {ATTR_GROUPS.map((g, gi) => (
             <div
@@ -296,7 +296,7 @@ export const SheetPage1 = ({ showTips }: { showTips?: boolean }) => {
       </div>
 
       {/* ===== 3. ВИТЭ И ВОЛЯ ===== */}
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '10px' : '20px', marginBottom: '15px', borderBottom: `2px solid var(--border)`, paddingBottom: '15px', alignItems: 'center', flexShrink: 0 }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '10px' : '20px', marginBottom: '8px', borderBottom: `2px solid var(--border)`, paddingBottom: '8px', alignItems: 'center', flexShrink: 0 }}>
         <div style={{ flex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
             <span style={{ fontWeight: 'bold', fontSize: '13px', fontFamily: "'Georgia', serif" }}>{t('ui.vitae')}</span>
@@ -315,7 +315,7 @@ export const SheetPage1 = ({ showTips }: { showTips?: boolean }) => {
       </div>
 
       {/* ===== 4. УСКОРЕНИЕ ===== */}
-      <div style={{ textAlign: 'center', marginBottom: '10px', flexShrink: 0 }}>
+      <div style={{ textAlign: 'center', marginBottom: '4px', flexShrink: 0 }}>
         <div style={{ fontWeight: 'bold', fontSize: '12px', letterSpacing: '0.1em', fontFamily: "'Georgia', serif", display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           {t('ui.blood_surge')}
           <Tooltip text={TOOLTIPS.bloodSurge} showTips={!!showTips} />
@@ -331,7 +331,7 @@ export const SheetPage1 = ({ showTips }: { showTips?: boolean }) => {
       </div>
 
       {/* ===== 6. НАВЫКИ ===== */}
-      <div style={{ marginBottom: '15px', border: '1px solid var(--border)', padding: '0', flexShrink: 0, overflow: 'hidden' }}>
+      <div style={{ marginBottom: '8px', border: '1px solid var(--border)', padding: '0', flexShrink: 0, overflow: 'hidden' }}>
         <div style={{
           ...sectionHeaderStyle,
           margin: 0,
@@ -362,7 +362,7 @@ export const SheetPage1 = ({ showTips }: { showTips?: boolean }) => {
                 width: '100%',
                 backgroundColor: isEven ? 'var(--bg)' : 'var(--headerBg)',
                 borderBottom: sIdx < SKILLS_LIST.length - 1 ? '1px solid var(--border)' : 'none',
-                padding: '4px 8px',
+                padding: '2px 8px',
                 boxSizing: 'border-box'
               }}
             >
