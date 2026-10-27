@@ -261,7 +261,13 @@
     "language_ru": "Русский",
     "language_en": "English",
     "language_zh": "中文",
-    "delete": "Удалить"
+    "delete": "Удалить",
+    "tips_toggle": "Вкл/Выкл подсказки",
+    "pdf_classic_hint": "Экспорт PDF в светлой (классической) теме",
+    "history_changes": "История изменений",
+    "tooltip_label": "Подсказка",
+    "custom_nostalgia": "Своя ностальгия",
+    "custom_clan": "Свой клан"
   },
   "attributes_groups": {
     "physical": "ФИЗИЧЕСКИЕ",
@@ -763,5 +769,21 @@
         "upgrade": "Нет."
       }
     }
+  },
+  "history": {
+    "title": "История",
+    "empty": "Изменений пока нет",
+    "clear_confirm": "Очистить историю?",
+    "clear_button": "Очистить историю",
+    "vitae": "Витэ",
+    "willpower": "Воля",
+    "humanity": "Человечность",
+    "blood_surge": "Ускорение"
+  },
+  "pdf": {
+    "exporting": "Экспорт PDF",
+    "page_of": "Страница {{current}} из {{total}}",
+    "preparing": "Подготовка...",
+    "error_prefix": "Ошибка экспорта PDF:"
   }
 }

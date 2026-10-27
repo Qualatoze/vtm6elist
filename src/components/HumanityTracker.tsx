@@ -5,17 +5,18 @@ import { TOOLTIPS } from '../data/tooltips';
 
 const CELL = 15;
 
-const CounterRow = ({ label, value, onChange, fillColor, showTips }: {
+const CounterRow = ({ label, value, onChange, fillColor, showTips, tooltip }: {
   label: string;
   value: number;
   onChange: (v: number) => void;
   fillColor: string;
   showTips?: boolean;
+  tooltip?: string;
 }) => (
   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
     <div style={{ fontSize: '9px', fontWeight: 'bold', color: 'var(--muted)', letterSpacing: '0.05em', fontFamily: "'Georgia', serif", display: 'flex', alignItems: 'center' }}>
       {label}
-      <Tooltip text={label === "Зверь" ? TOOLTIPS.beastCounter : TOOLTIPS.natureCounter} showTips={!!showTips} iconSize={12} />
+      <Tooltip text={tooltip ?? TOOLTIPS.natureCounter} showTips={!!showTips} iconSize={12} />
     </div>
     <div style={{ display: 'flex', gap: '3px' }}>
       {Array.from({ length: 5 }).map((_, i) => {
@@ -64,6 +65,7 @@ export const HumanityTracker = ({ showTips }: { showTips?: boolean }) => {
           onChange={(v) => updateHumanity('beast', v)}
           fillColor="var(--accent)"
           showTips={showTips}
+          tooltip={TOOLTIPS.beastCounter}
         />
 
         {/* ЦЕНТР: шкала Человечности (7 квадратов) */}

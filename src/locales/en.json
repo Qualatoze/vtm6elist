@@ -261,7 +261,13 @@
     "language_ru": "Russian",
     "language_en": "English",
     "language_zh": "Chinese",
-    "delete": "Delete"
+    "delete": "Delete",
+    "tips_toggle": "Toggle tips",
+    "pdf_classic_hint": "Export PDF in light (classic) theme",
+    "history_changes": "Change history",
+    "tooltip_label": "Hint",
+    "custom_nostalgia": "Custom nostalgia",
+    "custom_clan": "Custom clan"
   },
   "attributes_groups": {
     "physical": "PHYSICAL",
@@ -763,5 +769,21 @@
         "upgrade": "None."
       }
     }
+  },
+  "history": {
+    "title": "History",
+    "empty": "No changes yet",
+    "clear_confirm": "Clear history?",
+    "clear_button": "Clear history",
+    "vitae": "Vitae",
+    "willpower": "Willpower",
+    "humanity": "Humanity",
+    "blood_surge": "Blood Surge"
+  },
+  "pdf": {
+    "exporting": "Export PDF",
+    "page_of": "Page {{current}} of {{total}}",
+    "preparing": "Preparing...",
+    "error_prefix": "PDF export error:"
   }
 }

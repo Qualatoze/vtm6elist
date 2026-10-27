@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { HelpCircle } from 'lucide-react';
+import { t } from '../i18n';
 
 interface TooltipProps {
   text: string;
@@ -45,7 +46,7 @@ export const Tooltip = ({ text, showTips, position = 'top', iconSize = 14 }: Too
           alignItems: 'center',
           opacity: 0.7
         }}
-        title="Подсказка"
+        title={t('common.tooltip_label')}
       >
         <HelpCircle size={iconSize} />
       </button>
@@ -70,7 +71,8 @@ export const Tooltip = ({ text, showTips, position = 'top', iconSize = 14 }: Too
             fontFamily: "'Inter', sans-serif",
             zIndex: 9999,
             pointerEvents: 'none',
-            whiteSpace: 'normal',
+            fontWeight: '400',
+            whiteSpace: 'pre-wrap',
             textAlign: 'left'
           }}
         >

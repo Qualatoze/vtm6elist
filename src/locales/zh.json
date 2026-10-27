@@ -261,7 +261,13 @@
     "language_ru": "俄语",
     "language_en": "英语",
     "language_zh": "中文",
-    "delete": "删除"
+    "delete": "删除",
+    "tips_toggle": "开关提示",
+    "pdf_classic_hint": "以浅色（经典）主题导出 PDF",
+    "history_changes": "更改历史",
+    "tooltip_label": "提示",
+    "custom_nostalgia": "自定义怀旧",
+    "custom_clan": "自定义氏族"
   },
   "attributes_groups": {
     "physical": "体能",
@@ -763,5 +769,21 @@
         "upgrade": "无。"
       }
     }
+  },
+  "history": {
+    "title": "历史记录",
+    "empty": "暂无更改",
+    "clear_confirm": "清除历史？",
+    "clear_button": "清除历史",
+    "vitae": "精血",
+    "willpower": "意志力",
+    "humanity": "人性",
+    "blood_surge": "血液涌动"
+  },
+  "pdf": {
+    "exporting": "导出 PDF",
+    "page_of": "{{current}} / {{total}} 页",
+    "preparing": "准备中...",
+    "error_prefix": "PDF 导出错误："
   }
 }

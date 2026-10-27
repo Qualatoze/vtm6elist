@@ -29,12 +29,14 @@ function App() {
   const [isExporting, setIsExporting] = useState(false);
   const [pdfProgress, setPdfProgress] = useState({ current: 0, total: 0 });
   const isExportingRef = useRef(false);
-
+  
   // Классический режим экспорта PDF (светлая тема)
   const [pdfClassicMode, setPdfClassicMode] = useState<boolean>(() => safeStorage.get('vtm6e-pdf-classic') !== 'false');
-
+  const pdfClassicModeRef = useRef(pdfClassicMode);
+  
   useEffect(() => {
     safeStorage.set('vtm6e-pdf-classic', pdfClassicMode.toString());
+    pdfClassicModeRef.current = pdfClassicMode;
   }, [pdfClassicMode]);
 
   const { getActive, loadCharacter, loadCharacters, resetActiveCharacter, addPowerPage, history, pushHistory, clearHistory } = useCharacterStore();
@@ -52,20 +54,19 @@ function App() {
     if (!oldC) return [];
     const changes: string[] = [];
 
-    if (oldC.vitae.current !== newC.vitae.current) changes.push(`Витэ ${oldC.vitae.current} > ${newC.vitae.current}`);
-    if (oldC.willpower.current !== newC.willpower.current) changes.push(`Воля ${oldC.willpower.current} > ${newC.willpower.current}`);
-    if (oldC.humanity.path !== newC.humanity.path) changes.push(`Человечность ${oldC.humanity.path} > ${newC.humanity.path}`);
-    if (oldC.bloodSurge !== newC.bloodSurge) changes.push(`Ускорение ${oldC.bloodSurge} > ${newC.bloodSurge}`);
+    if (oldC.vitae.current !== newC.vitae.current) changes.push(`${t('history.vitae')} ${oldC.vitae.current} > ${newC.vitae.current}`);
+    if (oldC.willpower.current !== newC.willpower.current) changes.push(`${t('history.willpower')} ${oldC.willpower.current} > ${newC.willpower.current}`);
+    if (oldC.humanity.path !== newC.humanity.path) changes.push(`${t('history.humanity')} ${oldC.humanity.path} > ${newC.humanity.path}`);
+    if (oldC.bloodSurge !== newC.bloodSurge) changes.push(`${t('history.blood_surge')} ${oldC.bloodSurge} > ${newC.bloodSurge}`);
 
     const attrs = ['strength', 'dexterity', 'stamina', 'charisma', 'manipulation', 'composure', 'intelligence', 'wits', 'resolve'];
-    const attrNames: Record<string, string> = { strength: 'Сила', dexterity: 'Ловкость', stamina: 'Выносливость', charisma: 'Обаяние', manipulation: 'Манипуляция', composure: 'Самообладание', intelligence: 'Интеллект', wits: 'Смекалка', resolve: 'Упорство' };
     
     ['physical', 'social', 'mental'].forEach(group => {
       attrs.forEach(a => {
         if (newC.attributes[group]?.[a] !== undefined) {
           const oldVal = oldC.attributes[group]?.[a] || 0;
           const newVal = newC.attributes[group]?.[a] || 0;
-          if (oldVal !== newVal) changes.push(`${attrNames[a]} ${oldVal} > ${newVal}`);
+          if (oldVal !== newVal) changes.push(`${t('attributes.' + a)} ${oldVal} > ${newVal}`);
         }
       });
     });
@@ -124,16 +125,17 @@ function App() {
   }, [themeId]);
 
   const handleExportPdf = async () => {
-    if (isExporting) return;
+    if (isExportingRef.current) return;
     setIsExporting(true);
     setPdfProgress({ current: 0, total: 0 });
     
     try {
-      await exportAllPDFs(character.meta.name, (current, total) => {
+      const active = useCharacterStore.getState().getActive();
+      await exportAllPDFs(active.meta.name, (current, total) => {
         setPdfProgress({ current, total });
-      }, pdfClassicMode);
+      }, pdfClassicModeRef.current);
     } catch (err) {
-      alert('Ошибка экспорта PDF: ' + (err as Error).message);
+      alert(t('pdf.error_prefix') + ' ' + (err as Error).message);
     } finally {
       setIsExporting(false);
       setPdfProgress({ current: 0, total: 0 });
@@ -194,7 +196,7 @@ function App() {
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           color: '#fff', fontFamily: "'Cinzel', serif"
         }}>
-          <div style={{ fontSize: '24px', marginBottom: '20px', letterSpacing: '0.1em' }}>Экспорт PDF</div>
+          <div style={{ fontSize: '24px', marginBottom: '20px', letterSpacing: '0.1em' }}>{t('pdf.exporting')}</div>
           <div style={{ width: '300px', height: '12px', background: '#333', borderRadius: '6px', overflow: 'hidden', border: '1px solid #555' }}>
             <div style={{
               height: '100%',
@@ -204,7 +206,7 @@ function App() {
             }} />
           </div>
           <div style={{ marginTop: '12px', fontSize: '14px', color: '#aaa' }}>
-            {pdfProgress.total > 0 ? `Страница ${pdfProgress.current} из ${pdfProgress.total}` : 'Подготовка...'}
+            {pdfProgress.total > 0 ? t('pdf.page_of', { current: pdfProgress.current, total: pdfProgress.total }) : t('pdf.preparing')}
           </div>
         </div>
       )}
@@ -278,7 +280,7 @@ function App() {
 
           {/* Group 3: Tools */}
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button className="icon-btn" onClick={() => setShowTips(!showTips)} title="Вкл/Выкл подсказки" style={{ position: 'relative', color: showTips ? 'var(--accent)' : 'var(--muted)' }}>
+            <button className="icon-btn" onClick={() => setShowTips(!showTips)} title={t('common.tips_toggle')} style={{ position: 'relative', color: showTips ? 'var(--accent)' : 'var(--muted)' }}>
               <span style={{ position: 'absolute', top: '-6px', left: '50%', transform: 'translateX(-50%)', fontSize: '7px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', pointerEvents: 'none' }}>tips</span>
               <HelpCircle size={16} />
             </button>
@@ -302,7 +304,7 @@ function App() {
 
           {/* Group 4: PDF Export + Classic checkbox */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 8px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', cursor: 'pointer', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }} title="Экспорт PDF в светлой (классической) теме">
+            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', cursor: 'pointer', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }} title={t('common.pdf_classic_hint')}>
               <input
                 type="checkbox"
                 checked={pdfClassicMode}
@@ -323,7 +325,7 @@ function App() {
             <button
               className="icon-btn"
               onClick={() => setShowHistory(!showHistory)}
-              title="История изменений"
+              title={t('common.history_changes')}
               style={{ position: 'relative', opacity: isExporting ? 0.5 : 1 }}
               disabled={isExporting}
             >
@@ -379,12 +381,12 @@ function App() {
       {showHistory && (
         <div className="no-print fixed inset-y-0 right-0 w-80 z-[100] flex flex-col shadow-2xl" style={{ background: 'var(--panel)', borderLeft: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid var(--border)' }}>
-            <h3 style={{ margin: 0, fontWeight: 'bold', color: 'var(--accent)', fontSize: '16px', fontFamily: "'Cinzel', serif" }}>История</h3>
+            <h3 style={{ margin: 0, fontWeight: 'bold', color: 'var(--accent)', fontSize: '16px', fontFamily: "'Cinzel', serif" }}>{t('history.title')}</h3>
             <button onClick={() => setShowHistory(false)} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer' }}><X size={18} /></button>
           </div>
 
           <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {history.length === 0 && <span style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginTop: '20px' }}>Изменений пока нет</span>}
+            {history.length === 0 && <span style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginTop: '20px' }}>{t('history.empty')}</span>}
             
             {history.map((item) => (
               <div key={item.id} style={{ fontSize: '12px', lineHeight: 1.4, color: 'var(--text)' }}>
@@ -400,8 +402,8 @@ function App() {
           
           {history.length > 0 && (
             <div style={{ padding: '16px', borderTop: '1px solid var(--border)' }}>
-               <button onClick={() => { if(confirm('Очистить историю?')) clearHistory(); }} style={{ width: '100%', background: 'transparent', color: 'var(--muted)', border: `1px solid var(--border)`, padding: '8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>
-                  Очистить историю
+               <button onClick={() => { if(confirm(t('history.clear_confirm'))) clearHistory(); }} style={{ width: '100%', background: 'transparent', color: 'var(--muted)', border: `1px solid var(--border)`, padding: '8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>
+                  {t('history.clear_button')}
                </button>
             </div>
           )}

@@ -173,7 +173,7 @@ export const SheetPage1 = ({ showTips }: { showTips?: boolean }) => {
                   checked={isCustomNostalgia}
                   onChange={e => setIsCustomNostalgia(e.target.checked)}
                   style={{ accentColor: 'var(--accent)', cursor: 'pointer', margin: 0 }}
-                  title="Своя ностальгия"
+                  title={t('common.custom_nostalgia')}
                 />
                 <Tooltip text={TOOLTIPS.nostalgia} showTips={!!showTips} />
               </div>
@@ -204,7 +204,7 @@ export const SheetPage1 = ({ showTips }: { showTips?: boolean }) => {
                 checked={isCustomClan}
                 onChange={e => setIsCustomClan(e.target.checked)}
                 style={{ accentColor: 'var(--accent)', cursor: 'pointer', margin: 0 }}
-                title="Свой клан"
+                title={t('common.custom_clan')}
               />
             }
           />

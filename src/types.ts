@@ -1,12 +1,5 @@
 import { t } from './i18n';
 
-export interface InventoryItem {
-  id: string;
-  name: string;
-  qty: string;
-  description: string;
-}
-
 export interface CharacterSheet {
   id: string;
   meta: {
@@ -50,7 +43,6 @@ export interface CharacterSheet {
     dots: number;
     powersList: [string, string, string, string, string];
   }>;
-  inventory: InventoryItem[];
   lifePaths: string[];
   clanTraits: string;
   merits: string;

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { CharacterSheet, InventoryItem, SKILLS_LIST, CLAN_DATA, VAMPIRE_TYPES, NOSTALGIA_DECADES, GENERATION_TO_MODIFIER, VAMPIRE_TYPE_TO_GENERATION, SIRE_TYPE_TO_DISCIPLINE, SIRE_TYPE_TO_DISCIPLINES, NATURE_TO_FLASH, MORTAL_LIFE_PATHS, VAMPIRE_LIFE_PATHS, normalizeId, DisciplineCard, PowerPage } from './types';
+import { CharacterSheet, SKILLS_LIST, CLAN_DATA, VAMPIRE_TYPES, NOSTALGIA_DECADES, GENERATION_TO_MODIFIER, VAMPIRE_TYPE_TO_GENERATION, SIRE_TYPE_TO_DISCIPLINE, SIRE_TYPE_TO_DISCIPLINES, NATURE_TO_FLASH, MORTAL_LIFE_PATHS, VAMPIRE_LIFE_PATHS, normalizeId, DisciplineCard, PowerPage } from './types';
 import { t } from './i18n';
 import { DISCIPLINE_POWERS } from './data/disciplinePowers';
 import { debouncedStorage } from './utils/debouncedStorage';
@@ -39,7 +39,6 @@ export const createEmptyCharacter = (): CharacterSheet => ({
   skills: { ...initialSkills },
   resources: [{ name: t('resources.wealth'), dots: 0, squares: 0, notes: '' }],
   items: '',
-  inventory: [],
   inventoryText: '',       // <-- новое поле
   disciplines: [],
   lifePaths: [], clanTraits: '', merits: '', flaws: '', notes: '', biography: '',
@@ -73,9 +72,6 @@ interface CharacterStore {
   addResource: () => void;
   updateResource: (index: number, field: string, value: any) => void;
   removeResource: (index: number) => void;
-  addInventoryItem: () => void;
-  updateInventoryItem: (id: string, field: keyof InventoryItem, value: string) => void;
-  removeInventoryItem: (id: string) => void;
   addDiscipline: () => void;
   updateDiscipline: (index: number, field: string, value: any) => void;
   updateDisciplinePower: (index: number, lineIndex: 0 | 1 | 2 | 3 | 4, value: string) => void;
@@ -201,13 +197,12 @@ const normalizeCharacter = (c: CharacterSheet): CharacterSheet => {
     } : c.nature,
     lifePaths: c.lifePaths || [],
     resources: c.resources || [],
-    inventory: Array.isArray(c.inventory) ? c.inventory : [],
 
-    // Миграция: если old inventory (массив) есть, а inventoryText нет — конвертируем в строку
+    // Миграция для старых сейвов: legacy inventory[] конвертируем в строку inventoryText
     inventoryText: c.inventoryText ?? (
-      Array.isArray(c.inventory)
-        ? c.inventory
-            .map(i => {
+      Array.isArray((c as any).inventory)
+        ? ((c as any).inventory)
+            .map((i: { name?: string; qty?: number | string; description?: string }) => {
               if (!i) return '';
               const name = i.name?.trim() || '';
               if (!name) return '';
@@ -240,7 +235,6 @@ const normalizeCharacter = (c: CharacterSheet): CharacterSheet => {
       current: clamp(c.willpower?.current, 0, c.willpower?.max ?? 7),
     }
   };
-  delete (normalized as any).diary;
   return normalized;
 };
 
@@ -526,21 +520,6 @@ export const useCharacterStore = create<CharacterStore>()(
 
       removeResource: (index) => set(state => updateActive(state, c => ({
         ...c, resources: c.resources.filter((_, i) => i !== index)
-      }))),
-
-      addInventoryItem: () => set(state => updateActive(state, c => ({
-        ...c,
-        inventory: [...(c.inventory || []), { id: crypto.randomUUID(), name: '', qty: '', description: '' }]
-      }))),
-
-      updateInventoryItem: (id, field, value) => set(state => updateActive(state, c => ({
-        ...c,
-        inventory: (c.inventory || []).map(item => item.id === id ? { ...item, [field]: value } : item)
-      }))),
-
-      removeInventoryItem: (id) => set(state => updateActive(state, c => ({
-        ...c,
-        inventory: (c.inventory || []).filter(item => item.id !== id)
       }))),
 
       addDiscipline: () => set(state => updateActive(state, c => ({
