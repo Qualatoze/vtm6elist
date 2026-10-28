@@ -26,7 +26,7 @@ export const SheetPageInventory = () => {
     <div
       id="character-sheet-inventory"
       className="sheet-page"
-      style={{ ...sheetStyle, width: isMobile ? '100%' : 'min(210mm, 100%)' }}
+      style={{ ...sheetStyle, width: isMobile ? '100%' : '210mm' }}
     >
       <h1 style={{
         margin: '0 0 12px',

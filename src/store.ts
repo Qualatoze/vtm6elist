@@ -1,9 +1,12 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { CharacterSheet, SKILLS_LIST, CLAN_DATA, VAMPIRE_TYPES, NOSTALGIA_DECADES, GENERATION_TO_MODIFIER, VAMPIRE_TYPE_TO_GENERATION, SIRE_TYPE_TO_DISCIPLINE, SIRE_TYPE_TO_DISCIPLINES, NATURE_TO_FLASH, MORTAL_LIFE_PATHS, VAMPIRE_LIFE_PATHS, normalizeId, DisciplineCard, PowerPage } from './types';
+import { CharacterSheet, SKILLS_LIST, CLAN_DATA, VAMPIRE_TYPES, NOSTALGIA_DECADES, GENERATION_TO_MODIFIER, VAMPIRE_TYPE_TO_GENERATION, SIRE_TYPE_TO_DISCIPLINE, SIRE_TYPE_TO_DISCIPLINES, NATURE_TO_FLASH, MORTAL_LIFE_PATHS, VAMPIRE_LIFE_PATHS, normalizeId, DisciplineCard, PowerPage, HistoryItem } from './types';
 import { t } from './i18n';
 import { DISCIPLINE_POWERS } from './data/disciplinePowers';
 import { debouncedStorage } from './utils/debouncedStorage';
+import { useUIStore } from './uiStore';
+import { getAttributeCap, getSkillCap } from './utils/limits';
+import { normalizeHistory } from './utils/migrate';
 
 const generateId = () => crypto.randomUUID();
 
@@ -48,11 +51,6 @@ export const createEmptyCharacter = (): CharacterSheet => ({
   powerPages: [{ id: generateId(), layout: 4, fontSize: 11, cards: [] }]
 });
 
-export interface HistoryItem {
-  id: string;
-  timestamp: number;
-  changes: string[];
-}
 
 interface CharacterStore {
   characters: CharacterSheet[];
@@ -68,6 +66,7 @@ interface CharacterStore {
   updateWillpower: (current: number) => void;
   updateBloodSurge: (value: number) => void;
   resetBloodSurge: () => void;
+  advanceNight: () => void;
   updateHumanity: (field: 'path' | 'beast' | 'natureCounter', value: number) => void;
   addResource: () => void;
   updateResource: (index: number, field: string, value: any) => void;
@@ -94,6 +93,20 @@ interface CharacterStore {
   pushHistory: (changes: string[]) => void;
   clearHistory: () => void;
 }
+
+// PDF стр. 20: Витэ ≤ 15, Воля ≤ 15
+const MAX_VITAE = 15;
+const MAX_WILLPOWER = 15;
+
+const deriveVitae = (stamina: number, current: number) => {
+  const max = Math.min(MAX_VITAE, 10 + stamina);
+  return { max, current: Math.min(current, max) };
+};
+
+const deriveWillpower = (composure: number, resolve: number, current: number) => {
+  const max = Math.min(MAX_WILLPOWER, 5 + composure + resolve);
+  return { max, current: Math.min(current, max) };
+};
 
 const updateActive = (state: CharacterStore, updater: (c: CharacterSheet) => CharacterSheet) => {
   if (!state.characters.length) return state;
@@ -226,14 +239,14 @@ const normalizeCharacter = (c: CharacterSheet): CharacterSheet => {
             : []
         }))
       : [{ id: generateId(), layout: 4, fontSize: 11, cards: [] }],
-    vitae: {
-      max: clamp(c.vitae?.max, 1, 20),
-      current: clamp(c.vitae?.current, 0, c.vitae?.max ?? 11),
-    },
-    willpower: {
-      max: clamp(c.willpower?.max, 1, 15),
-      current: clamp(c.willpower?.current, 0, c.willpower?.max ?? 7),
-    }
+    vitae: (() => {
+      const max = clamp(c.vitae?.max, 1, MAX_VITAE);
+      return { max, current: clamp(c.vitae?.current, 0, max) };
+    })(),
+    willpower: (() => {
+      const max = clamp(c.willpower?.max, 1, MAX_WILLPOWER);
+      return { max, current: clamp(c.willpower?.current, 0, max) };
+    })()
   };
   return normalized;
 };
@@ -397,6 +410,28 @@ export const useCharacterStore = create<CharacterStore>()(
         if (field === 'generation') {
           newMeta.modifier = GENERATION_TO_MODIFIER(value);
           newChar = { ...newChar, meta: newMeta };
+
+          const unlock = useUIStore.getState().unlockAttributes;
+          const cap = getAttributeCap(value, unlock);
+          const A = newChar.attributes;
+          const phys = {
+            strength: Math.min(A.physical.strength, cap),
+            dexterity: Math.min(A.physical.dexterity, cap),
+            stamina: Math.min(A.physical.stamina, cap),
+          };
+          const soc = {
+            charisma: Math.min(A.social.charisma, cap),
+            manipulation: Math.min(A.social.manipulation, cap),
+            composure: Math.min(A.social.composure, cap),
+          };
+          const men = {
+            intelligence: Math.min(A.mental.intelligence, cap),
+            wits: Math.min(A.mental.wits, cap),
+            resolve: Math.min(A.mental.resolve, cap),
+          };
+          newChar.attributes = { physical: phys, social: soc, mental: men };
+          newChar.vitae = deriveVitae(phys.stamina, newChar.vitae.current);
+          newChar.willpower = deriveWillpower(soc.composure, men.resolve, newChar.willpower.current);
         }
 
         // === АВТОЗАПОЛНЕНИЕ: ВИД -> ПОКОЛЕНИЕ + МОДИФИКАТОР ===
@@ -412,6 +447,16 @@ export const useCharacterStore = create<CharacterStore>()(
               newChar = { ...newChar, meta: newMeta };
             }
           }
+
+          const unlock = useUIStore.getState().unlockSkills;
+          const skillCap = getSkillCap(value, unlock);
+          const newSkills = { ...newChar.skills };
+          Object.keys(newSkills).forEach(sid => {
+            if (newSkills[sid].dots > skillCap) {
+              newSkills[sid] = { ...newSkills[sid], dots: skillCap };
+            }
+          });
+          newChar.skills = newSkills;
         }
 
         // === АВТОЗАПОЛНЕНИЕ: СИР -> ДИСЦИПЛИНА ===
@@ -440,7 +485,9 @@ export const useCharacterStore = create<CharacterStore>()(
       })),
 
       updateAttribute: (category, attr, value) => set(state => updateActive(state, c => {
-        const clampedValue = Math.max(0, Math.min(value, 10));
+        const unlock = useUIStore.getState().unlockAttributes;
+        const cap = getAttributeCap(c.meta.generation, unlock);
+        const clampedValue = Math.max(1, Math.min(value, cap)); // минимум 1
         const newAttrs = {
           ...c.attributes,
           [category]: { ...c.attributes[category], [attr]: clampedValue }
@@ -449,31 +496,26 @@ export const useCharacterStore = create<CharacterStore>()(
         const stamina = newAttrs.physical.stamina;
         const composure = newAttrs.social.composure;
         const resolve = newAttrs.mental.resolve;
-        const oldMaxVitae = c.vitae.max;
-        const newMaxVitae = 10 + stamina;
-        const vitaeDelta = newMaxVitae - oldMaxVitae;
-        const newVitaeCurrent = vitaeDelta > 0
-          ? Math.min(c.vitae.current + vitaeDelta, newMaxVitae)
-          : Math.min(c.vitae.current, newMaxVitae);
-
-        const oldMaxWillpower = c.willpower.max;
-        const newMaxWillpower = 5 + composure + resolve;
-        const willpowerDelta = newMaxWillpower - oldMaxWillpower;
-        const newWillpowerCurrent = willpowerDelta > 0
-          ? Math.min(c.willpower.current + willpowerDelta, newMaxWillpower)
-          : Math.min(c.willpower.current, newMaxWillpower);
 
         return {
           ...c,
           attributes: newAttrs,
-          vitae: { max: newMaxVitae, current: newVitaeCurrent },
-          willpower: { max: newMaxWillpower, current: newWillpowerCurrent }
+          vitae: deriveVitae(stamina, c.vitae.current),
+          willpower: deriveWillpower(composure, resolve, c.willpower.current),
         };
       })),
 
-      updateSkill: (skill, dots) => set(state => updateActive(state, c => ({
-        ...c, skills: { ...c.skills, [skill]: { ...c.skills[skill], dots: Math.max(0, Math.min(dots, 5)) } }
-      }))),
+      updateSkill: (skill, dots) => set(state => updateActive(state, c => {
+        const unlock = useUIStore.getState().unlockSkills;
+        const cap = getSkillCap(c.meta.type, unlock);
+        return {
+          ...c,
+          skills: {
+            ...c.skills,
+            [skill]: { ...c.skills[skill], dots: Math.max(0, Math.min(dots, cap)) }
+          }
+        };
+      })),
 
       updateSpecification: (skill, index, value) => set(state => updateActive(state, c => {
         const current = c.skills[skill] ?? { dots: 0, specifications: ['', '', ''] };
@@ -500,9 +542,18 @@ export const useCharacterStore = create<CharacterStore>()(
 
       resetBloodSurge: () => set(state => updateActive(state, c => ({ ...c, bloodSurge: 0 }))),
 
+      advanceNight: () => set(state => updateActive(state, c => ({
+        ...c,
+        humanity: {
+          ...c.humanity,
+          beast: Math.min(c.humanity.beast + 1, 5),
+          natureCounter: Math.min(c.humanity.natureCounter + 1, 5),
+        },
+      }))),
+
       updateHumanity: (field, value) => set(state => updateActive(state, c => {
         let val = value;
-        if (field === 'path') val = Math.max(0, Math.min(value, 7));
+        if (field === 'path') val = Math.max(1, Math.min(value, 7));
         else val = Math.max(0, Math.min(value, 5));
         return { ...c, humanity: { ...c.humanity, [field]: val } };
       })),
@@ -716,15 +767,35 @@ export const useCharacterStore = create<CharacterStore>()(
 
       history: [],
       pushHistory: (changes) => set(state => {
-        if (!changes || changes.length === 0) return state;
-        const item: HistoryItem = { id: crypto.randomUUID(), timestamp: Date.now(), changes };
-        return { history: [item, ...(state.history || [])].slice(0, 50) };
+        // Runtime-guard: типы TS не спасают от legacy-вызовов
+        if (!Array.isArray(changes) || changes.length === 0) return state;
+        const cleaned = changes.filter(c => typeof c === 'string' && c.trim());
+        if (cleaned.length === 0) return state;
+        const item: HistoryItem = {
+          id: crypto.randomUUID(),
+          timestamp: Date.now(),
+          changes: cleaned,
+        };
+        const prev = Array.isArray(state.history) ? state.history : [];
+        return { history: [item, ...prev].slice(0, 50) };
       }),
       clearHistory: () => set({ history: [] }),
     }),
     {
       name: 'vtm6e-alpha-storage',
       storage: createJSONStorage(() => debouncedStorage),
+      version: 2,
+      migrate: (persisted: any, _version: number) => {
+        if (persisted?.state) {
+          if (persisted.state.history) {
+            persisted.state.history = normalizeHistory(persisted.state.history);
+          }
+          if (Array.isArray(persisted.state.characters)) {
+            persisted.state.characters = persisted.state.characters.map(normalizeCharacter);
+          }
+        }
+        return persisted;
+      },
       onRehydrateStorage: () => (state) => {
         if (state && (!state.characters || state.characters.length === 0)) {
           const c = createEmptyCharacter();
@@ -737,7 +808,13 @@ export const useCharacterStore = create<CharacterStore>()(
         if (state?.characters) {
           state.characters = state.characters.map(normalizeCharacter);
         }
+        if (state) {
+          state.history = normalizeHistory((state as any).history);
+        }
       }
     }
   )
 );
+
+// Экспорт для тестов
+export const __test_normalizeHistory = normalizeHistory;

@@ -1,4 +1,3 @@
-import { t } from './i18n';
 
 export interface CharacterSheet {
   id: string;
@@ -328,6 +327,7 @@ const RU_TO_ID: Record<string, string> = {
   // Виды вампиров
   'Вампир (неонат)': 'vampire_neonate', 'Анцилла': 'ancilla', 'Старейшина': 'elder',
   'Веспер': 'duskborn', 'Тонкий': 'thin_blood',
+  'vampire_elder': 'elder', 'vampire_ancilla': 'ancilla',
 
   // Жизненные пути (мёртвые)
   'Художник': 'artist', 'Руководитель компании': 'corporate_executive', 'Преступник': 'criminal',
@@ -377,4 +377,13 @@ export function normalizeId(value: string): string {
   // Иначе пробуем найти по русскому названию
   const found = RU_TO_ID[value];
   return found || value;
+}
+
+// ============================================================
+// История изменений
+// ============================================================
+export interface HistoryItem {
+  id: string;
+  timestamp: number;
+  changes: string[];
 }

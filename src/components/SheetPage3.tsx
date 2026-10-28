@@ -18,14 +18,14 @@ const sheetStyle: React.CSSProperties = {
   flexDirection: 'column',
 };
 
-export const SheetPage3 = ({ showTips }: { showTips?: boolean }) => {
+export const SheetPage3 = () => {
   const { t } = useTranslation();
   const character = useCharacterStore(s => s.getActive());
   const updateField = useCharacterStore(s => s.updateField);
   const isMobile = useIsMobile();
 
   return (
-    <div id="character-sheet-3" className="sheet-page" style={{ ...sheetStyle, width: 'min(210mm, 100%)' }}>
+    <div id="character-sheet-3" className="sheet-page" style={{ ...sheetStyle, width: isMobile ? '100%' : '210mm' }}>
       <h1 style={{
         margin: '0 0 12px',
         fontSize: '16px',

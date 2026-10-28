@@ -97,7 +97,7 @@ export const SheetPage4 = ({ page, pageIndex }: { page: PowerPage; pageIndex: nu
       id={`character-sheet-${page.id}`}
       className="sheet-page"
       style={{
-        width: 'min(210mm, 100%)',
+        width: isMobile ? '100%' : '210mm',
         height: isMobile ? 'auto' : '297mm',
         maxHeight: isMobile ? 'none' : '297mm',
         backgroundColor: 'var(--bg)',

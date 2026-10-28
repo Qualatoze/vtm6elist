@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   base: process.env.NODE_ENV === 'production' ? '/vtm6elist/' : '/',
-  plugins: [react()],
+  plugins: process.env.VITEST ? [] : [react()],
   build: {
     sourcemap: false,
     chunkSizeWarningLimit: 1000,

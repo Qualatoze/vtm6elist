@@ -264,10 +264,21 @@
     "delete": "删除",
     "tips_toggle": "开关提示",
     "pdf_classic_hint": "以浅色（经典）主题导出 PDF",
+    "pdf_classic_mode": "经典主题",
+    "pdf_remove_bg": "移除背景 (节省墨水)",
+    "pdf_remove_bg_hint": "在导出时移除所有主题的彩色背景，以节省打印机墨水。",
+    "pdf_do_export": "导出 PDF",
     "history_changes": "更改历史",
     "tooltip_label": "提示",
     "custom_nostalgia": "自定义怀旧",
-    "custom_clan": "自定义氏族"
+    "custom_clan": "自定义氏族",
+    "unlock_attributes_hint": "解锁属性限制（按世代）",
+    "unlock_skills_hint": "解锁技能限制（新生）",
+    "mobile_mode": "移动端视图",
+    "new_night": "新一夜",
+    "new_night_confirm": "在野兽和本性计数器上各标记1格？",
+    "end_session": "结束会话（重置血液涌动）",
+    "end_session_confirm": "重置血液涌动？"
   },
   "attributes_groups": {
     "physical": "体能",

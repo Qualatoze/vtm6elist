@@ -264,10 +264,21 @@
     "delete": "Удалить",
     "tips_toggle": "Вкл/Выкл подсказки",
     "pdf_classic_hint": "Экспорт PDF в светлой (классической) теме",
+    "pdf_classic_mode": "Классическая тема",
+    "pdf_remove_bg": "Убрать фон (экономия чернил)",
+    "pdf_remove_bg_hint": "Убирает цветные фоны из всех тем при экспорте, чтобы принтер не тратил чернила впустую.",
+    "pdf_do_export": "Экспортировать PDF",
     "history_changes": "История изменений",
     "tooltip_label": "Подсказка",
     "custom_nostalgia": "Своя ностальгия",
-    "custom_clan": "Свой клан"
+    "custom_clan": "Свой клан",
+    "unlock_attributes_hint": "Разблокировать лимиты характеристик (по поколению)",
+    "unlock_skills_hint": "Разблокировать лимиты навыков (неонат)",
+    "mobile_mode": "Мобильный вид",
+    "new_night": "Новая ночь",
+    "new_night_confirm": "Отметить по 1 ячейке Счётчиков Зверя и Натуры?",
+    "end_session": "Конец встречи (сброс Ускорения)",
+    "end_session_confirm": "Обнулить Ускорение?"
   },
   "attributes_groups": {
     "physical": "ФИЗИЧЕСКИЕ",

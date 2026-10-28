@@ -45,6 +45,27 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
             {this.state.error?.message || 'An unexpected error occurred.'}
           </p>
           <button
+            onClick={() => {
+              try {
+                localStorage.removeItem('vtm6e-alpha-storage');
+                localStorage.removeItem('vtm6e-mobile');
+                localStorage.removeItem('vtm6e-unlock');
+                localStorage.removeItem('vtm6e-theme');
+                localStorage.removeItem('vtm6e-lang');
+                localStorage.removeItem('vtm6e-tips');
+                localStorage.removeItem('vtm6e-pdf-classic');
+              } catch { /* ignore */ }
+              window.location.reload();
+            }}
+            style={{
+              padding: '8px 24px', fontSize: '1rem', cursor: 'pointer',
+              border: '1px solid #ccc', borderRadius: '4px', background: '#f5f5f5',
+              marginRight: '8px',
+            }}
+          >
+            Reset storage & reload
+          </button>
+          <button
             onClick={() => window.location.reload()}
             style={{
               padding: '8px 24px',

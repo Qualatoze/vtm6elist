@@ -11,7 +11,8 @@ import { VAMPIRE_TYPES, CREATION_RULES } from './types';
 import { exportJSON, importJSONFile, exportAllPDFs } from './utils/exportImport';
 import { safeStorage } from './utils/storage';
 import { THEMES, DEFAULT_THEME_ID } from './themes';
-import { Download, Upload, FileJson, RotateCcw, Menu, X, Send, BookOpen, Globe, History as HistoryIcon, HelpCircle } from 'lucide-react';
+import { useUIStore } from './uiStore';
+import { Download, Upload, FileJson, RotateCcw, Menu, X, Send, BookOpen, Globe, History as HistoryIcon, HelpCircle, Smartphone, Moon, RefreshCw } from 'lucide-react';
 
 function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -39,7 +40,33 @@ function App() {
     pdfClassicModeRef.current = pdfClassicMode;
   }, [pdfClassicMode]);
 
-  const { getActive, loadCharacter, loadCharacters, resetActiveCharacter, addPowerPage, history, pushHistory, clearHistory } = useCharacterStore();
+  // Убирать фон (для экономии чернил)
+  // Включено по умолчанию, пока пользователь явно не отключит
+  const [pdfRemoveBg, setPdfRemoveBg] = useState<boolean>(() => safeStorage.get('vtm6e-pdf-remove-bg') !== 'false');
+  const pdfRemoveBgRef = useRef(pdfRemoveBg);
+
+  // Состояние для открытия меню настроек PDF
+  const [showPdfMenu, setShowPdfMenu] = useState(false);
+  const pdfMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    safeStorage.set('vtm6e-pdf-remove-bg', pdfRemoveBg.toString());
+    pdfRemoveBgRef.current = pdfRemoveBg;
+  }, [pdfRemoveBg]);
+
+  // Закрытие меню по клику вне его области
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pdfMenuRef.current && !pdfMenuRef.current.contains(event.target as Node)) {
+        setShowPdfMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const { getActive, loadCharacter, loadCharacters, resetActiveCharacter, addPowerPage, history, pushHistory, clearHistory, advanceNight, resetBloodSurge } = useCharacterStore();
+  const { mobileMode, setMobileMode } = useUIStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const character = getActive();
   const prevCharRef = useRef(character);
@@ -133,7 +160,7 @@ function App() {
       const active = useCharacterStore.getState().getActive();
       await exportAllPDFs(active.meta.name, (current, total) => {
         setPdfProgress({ current, total });
-      }, pdfClassicModeRef.current);
+      }, pdfClassicModeRef.current, pdfRemoveBgRef.current);
     } catch (err) {
       alert(t('pdf.error_prefix') + ' ' + (err as Error).message);
     } finally {
@@ -300,24 +327,97 @@ function App() {
               <span style={{ position: 'absolute', top: '-6px', left: '50%', transform: 'translateX(-50%)', fontSize: '7px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', pointerEvents: 'none' }}>clear</span>
               <RotateCcw size={16} />
             </button>
+            <button
+              className="icon-btn"
+              onClick={() => { if (confirm(t('common.new_night_confirm'))) advanceNight(); }}
+              title={t('common.new_night')}
+              style={{ position: 'relative' }}
+            >
+              <span style={{
+                position: 'absolute', top: '-6px', left: '50%', transform: 'translateX(-50%)',
+                fontSize: '7px', color: 'var(--muted)',
+                textTransform: 'uppercase', letterSpacing: '0.1em', pointerEvents: 'none',
+              }}>night</span>
+              <Moon size={16} />
+            </button>
+            <button
+              className="icon-btn"
+              onClick={() => { if (confirm(t('common.end_session_confirm'))) resetBloodSurge(); }}
+              title={t('common.end_session')}
+              style={{ position: 'relative' }}
+            >
+              <span style={{
+                position: 'absolute', top: '-6px', left: '50%', transform: 'translateX(-50%)',
+                fontSize: '7px', color: 'var(--muted)',
+                textTransform: 'uppercase', letterSpacing: '0.1em', pointerEvents: 'none',
+              }}>end</span>
+              <RefreshCw size={16} />
+            </button>
           </div>
 
-          {/* Group 4: PDF Export + Classic checkbox */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 8px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', cursor: 'pointer', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }} title={t('common.pdf_classic_hint')}>
-              <input
-                type="checkbox"
-                checked={pdfClassicMode}
-                onChange={e => setPdfClassicMode(e.target.checked)}
-                style={{ accentColor: 'var(--accent)', cursor: 'pointer', margin: 0, width: '14px', height: '14px' }}
-              />
-              Classic
-            </label>
-            
-            <button className="icon-btn" style={{ position: 'relative', opacity: isExporting ? 0.5 : 1, cursor: isExporting ? 'not-allowed' : 'pointer', padding: '4px' }} onClick={handleExportPdf} disabled={isExporting}>
+          {/* Group 4: PDF Export Dropdown */}
+          <div ref={pdfMenuRef} style={{ position: 'relative', display: 'flex', alignItems: 'center', padding: '0 8px' }}>
+            <button
+              className="icon-btn"
+              style={{ position: 'relative', opacity: isExporting ? 0.5 : 1, cursor: isExporting ? 'not-allowed' : 'pointer', padding: '4px' }}
+              onClick={() => setShowPdfMenu(!showPdfMenu)}
+              disabled={isExporting}
+              title={t('common.pdf_export')}
+            >
               <span style={{ position: 'absolute', top: '-6px', left: '50%', transform: 'translateX(-50%)', fontSize: '7px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', pointerEvents: 'none' }}>pdf</span>
               <Download size={16} />
             </button>
+
+            {/* Выпадающее меню настроек PDF */}
+            {showPdfMenu && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: '8px',
+                background: 'var(--panel)',
+                border: '1px solid var(--border)',
+                borderRadius: '6px',
+                padding: '12px',
+                width: '220px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                zIndex: 100,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px'
+              }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', cursor: 'pointer', color: 'var(--text)' }} title={t('common.pdf_classic_hint')}>
+                  <input
+                    type="checkbox"
+                    checked={pdfClassicMode}
+                    onChange={e => setPdfClassicMode(e.target.checked)}
+                    style={{ accentColor: 'var(--accent)', cursor: 'pointer', margin: 0 }}
+                  />
+                  {t('common.pdf_classic_mode')}
+                </label>
+                
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', cursor: 'pointer', color: 'var(--text)' }} title={t('common.pdf_remove_bg_hint')}>
+                  <input
+                    type="checkbox"
+                    checked={pdfRemoveBg}
+                    onChange={e => setPdfRemoveBg(e.target.checked)}
+                    style={{ accentColor: 'var(--accent)', cursor: 'pointer', margin: 0 }}
+                  />
+                  {t('common.pdf_remove_bg')}
+                </label>
+
+                <button
+                  onClick={() => { setShowPdfMenu(false); handleExportPdf(); }}
+                  style={{
+                    marginTop: '4px', background: 'var(--accent)', color: 'var(--bg)',
+                    border: 'none', padding: '8px', borderRadius: '4px',
+                    cursor: 'pointer', fontWeight: 'bold', fontSize: '12px'
+                  }}
+                >
+                  {t('common.pdf_do_export')}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Group 5: Theme + Mobile menu */}
@@ -349,6 +449,22 @@ function App() {
               <Globe size={16} />
             </button>
             
+            <button
+              className="icon-btn"
+              onClick={() => setMobileMode(!mobileMode)}
+              title={t('common.mobile_mode')}
+              style={{
+                position: 'relative',
+                color: mobileMode ? 'var(--accent)' : 'var(--muted)',
+              }}
+            >
+              <span style={{
+                position: 'absolute', top: '-6px', left: '50%', transform: 'translateX(-50%)',
+                fontSize: '7px', color: 'var(--muted)',
+                textTransform: 'uppercase', letterSpacing: '0.1em', pointerEvents: 'none',
+              }}>mob</span>
+              <Smartphone size={16} />
+            </button>
             <select value={themeId} onChange={(e) => setThemeId(e.target.value)} style={{ background: 'var(--panel)', border: `1px solid var(--border)`, color: 'var(--text)', padding: '3px 5px', fontSize: '12px', borderRadius: '4px', opacity: isExporting ? 0.5 : 1 }} disabled={isExporting}>
               {THEMES.map(th => <option key={th.id} value={th.id}>{th.name}</option>)}
             </select>
@@ -374,7 +490,7 @@ function App() {
           </div>
         )}
 
-        <input type="file" accept=".json" ref={fileInputRef} onChange={handleImport} className="hidden" />
+        <input type="file" accept=".json" ref={fileInputRef} onChange={handleImport} style={{ display: 'none' }} />
       </header>
 
       {/* ПАНЕЛЬ ИСТОРИИ */}
@@ -388,16 +504,18 @@ function App() {
           <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {history.length === 0 && <span style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginTop: '20px' }}>{t('history.empty')}</span>}
             
-            {history.map((item) => (
-              <div key={item.id} style={{ fontSize: '12px', lineHeight: 1.4, color: 'var(--text)' }}>
-                <span style={{ color: 'var(--muted)', marginRight: '6px' }}>
-                  {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })},
-                </span>
-                <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>
-                  {item.changes.join(', ')}
-                </span>
-              </div>
-            ))}
+            {history
+              .filter(item => item && Array.isArray(item.changes) && item.changes.length > 0)
+              .map((item) => (
+                <div key={item.id} style={{ fontSize: '12px', lineHeight: 1.4, color: 'var(--text)' }}>
+                  <span style={{ color: 'var(--muted)', marginRight: '6px' }}>
+                    {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })},
+                  </span>
+                  <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>
+                    {item.changes.join(', ')}
+                  </span>
+                </div>
+              ))}
           </div>
           
           {history.length > 0 && (
@@ -411,8 +529,8 @@ function App() {
       )}
 
       {/* MAIN CONTENT */}
-      <main id="main-content" className="flex-1 p-2 md:p-6 pb-20 md:pb-6 overflow-x-hidden">
-        <div style={{ width: '100%', maxWidth: '210mm', margin: '0 auto' }}>
+      <main id="main-content" className="flex-1 p-2 md:p-6 pb-20 md:pb-6">
+        <div style={{ width: '100%', maxWidth: '210mm', margin: '0 auto', overflowX: 'auto' }}>
           <SheetPage1 showTips={showTips} />
           <SheetPage2 />
           <SheetPage3 />

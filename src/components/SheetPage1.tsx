@@ -7,6 +7,9 @@ import { HumanityTracker } from './HumanityTracker';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { Tooltip } from './Tooltip';
 import { TOOLTIPS } from '../data/tooltips';
+import { useUIStore } from '../uiStore';
+import { Lock, Unlock } from 'lucide-react';
+import { getAttributeCap, getSkillCap } from '../utils/limits';
 
 const ATTR_GROUPS = [
   { key: 'physical' as const, title: 'attributes_groups.physical', attrs: ['strength', 'dexterity', 'stamina'] },
@@ -29,7 +32,7 @@ const sheetStyle: React.CSSProperties = {
   backgroundColor: 'var(--bg)',
   color: 'var(--text)',
   margin: '0 auto',
-  padding: '6mm',
+  padding: '10mm',
   border: '3px solid var(--border)',
   boxSizing: 'border-box',
   fontFamily: "'Georgia', 'Times New Roman', serif",
@@ -133,6 +136,13 @@ export const SheetPage1 = ({ showTips }: { showTips?: boolean }) => {
   const character = useCharacterStore(s => s.getActive());
   const { updateMeta, updateAttribute, updateSkill, updateSpecification, updateVitae, updateWillpower, updateBloodSurge } = useCharacterStore();
   const isMobile = useIsMobile();
+  const unlockAttributes = useUIStore(s => s.unlockAttributes);
+  const setUnlockAttributes = useUIStore(s => s.setUnlockAttributes);
+  const unlockSkills = useUIStore(s => s.unlockSkills);
+  const setUnlockSkills = useUIStore(s => s.setUnlockSkills);
+
+  const attrCap = getAttributeCap(character.meta.generation, unlockAttributes);
+  const skillCap = getSkillCap(character.meta.type, unlockSkills);
 
   const [isCustomClan, setIsCustomClan] = useState(
     () => character.meta.clan !== '' && !CLANS_LIST.some(c => c.id === character.meta.clan)
@@ -230,7 +240,22 @@ export const SheetPage1 = ({ showTips }: { showTips?: boolean }) => {
       </div>
 
       {/* ===== 2. ХАРАКТЕРИСТИКИ ===== */}
-      <div style={{ border: `2px solid var(--border)`, marginBottom: '8px', flexShrink: 0 }}>
+      <div style={{ position: 'relative', border: `2px solid var(--border)`, marginBottom: '8px', flexShrink: 0 }}>
+        
+        {/* Кнопка разблокировки Характеристик */}
+        <button
+          onClick={() => setUnlockAttributes(!unlockAttributes)}
+          title={t('common.unlock_attributes_hint')}
+          style={{
+            position: 'absolute', top: '6px', right: '8px', zIndex: 20,
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            color: unlockAttributes ? 'var(--accent)' : 'var(--muted)',
+            display: 'flex', alignItems: 'center'
+          }}
+        >
+          {unlockAttributes ? <Unlock size={14} /> : <Lock size={14} />}
+        </button>
+
         <div style={{ background: 'var(--headerBg)', color: 'var(--header-text, var(--text))', display: 'flex', fontWeight: 'bold', fontSize: '11px', letterSpacing: '0.1em', fontFamily: "'Georgia', serif" }}>
           {ATTR_GROUPS.map((g, gi) => (
             <div
@@ -265,29 +290,54 @@ export const SheetPage1 = ({ showTips }: { showTips?: boolean }) => {
               {group.attrs.map(attr => (
                 <div key={attr} style={{ marginBottom: '4px' }}>
                   <div style={{ textAlign: 'center', fontSize: '11px', marginBottom: '4px', fontWeight: 'bold', fontFamily: "'Georgia', serif" }}>{t(ATTR_LABELS[attr])}</div>
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '3px' }}>
-                    <div style={{ display: 'flex', gap: '1px' }}>
-                      {Array.from({ length: 5 }).map((_, i) => {
-                        const pos = i + 1;
-                        const val = character.attributes[group.key][attr as keyof typeof character.attributes[typeof group.key]];
-                        const isFilled = pos <= val;
-                        return (
-                          <button key={`a-${i}`} onClick={() => updateAttribute(group.key, attr, pos === val ? 0 : pos)} style={{ width: '15px', height: '15px', background: isFilled ? 'var(--dot-color)' : 'transparent', border: `1px solid ${isFilled ? 'var(--dot-color)' : 'var(--border)'}`, borderRadius: '50%', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
-                        );
-                      })}
-                    </div>
-                    <div style={{ display: 'flex', gap: '1px' }}>
-                      {Array.from({ length: 5 }).map((_, i) => {
-                        const pos = i + 6;
-                        const val = character.attributes[group.key][attr as keyof typeof character.attributes[typeof group.key]];
-                        const isFilled = pos <= val;
-                        const isThreshold = pos >= 6;
-                        return (
-                          <button key={`b-${i}`} onClick={() => updateAttribute(group.key, attr, pos === val ? 0 : pos)} style={{ width: '15px', height: '15px', background: isFilled ? (isThreshold ? 'var(--accent)' : 'var(--dot-color)') : 'transparent', border: `1px solid ${isFilled ? (isThreshold ? 'var(--accent)' : 'var(--dot-color)') : 'var(--border)'}`, borderRadius: '50%', cursor: 'pointer', padding: 0, flexShrink: 0 }} />
-                        );
-                      })}
-                    </div>
-                  </div>
+                  {(() => {
+                    const val = character.attributes[group.key][attr as keyof typeof character.attributes[typeof group.key]];
+                    const total = Math.max(attrCap, val);
+                    const first = Math.min(5, total);
+                    const rest = total - first;
+                    return (
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '3px' }}>
+                        <div style={{ display: 'flex', gap: '1px' }}>
+                          {Array.from({ length: first }).map((_, i) => {
+                            const pos = i + 1;
+                            const isFilled = pos <= val;
+                            return (
+                              <button
+                                key={`a-${i}`}
+                                onClick={() => updateAttribute(group.key, attr, pos === val ? Math.max(1, val - 1) : pos)}
+                                style={{
+                                  width: '15px', height: '15px',
+                                  background: isFilled ? 'var(--dot-color)' : 'transparent',
+                                  border: `1px solid ${isFilled ? 'var(--dot-color)' : 'var(--border)'}`,
+                                  borderRadius: '50%', cursor: 'pointer', padding: 0, flexShrink: 0,
+                                }}
+                              />
+                            );
+                          })}
+                        </div>
+                        {rest > 0 && (
+                          <div style={{ display: 'flex', gap: '1px' }}>
+                            {Array.from({ length: rest }).map((_, i) => {
+                              const pos = 5 + i + 1;
+                              const isFilled = pos <= val;
+                              return (
+                                <button
+                                  key={`b-${i}`}
+                                  onClick={() => updateAttribute(group.key, attr, pos === val ? Math.max(1, val - 1) : pos)}
+                                  style={{
+                                    width: '15px', height: '15px',
+                                    background: isFilled ? 'var(--accent)' : 'transparent',
+                                    border: `1px solid ${isFilled ? 'var(--accent)' : 'var(--border)'}`,
+                                    borderRadius: '50%', cursor: 'pointer', padding: 0, flexShrink: 0,
+                                  }}
+                                />
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               ))}
             </div>
@@ -349,6 +399,19 @@ export const SheetPage1 = ({ showTips }: { showTips?: boolean }) => {
             position="bottom"
             iconSize={12}
           />
+          
+          {/* Кнопка разблокировки Навыков */}
+          <button
+            onClick={() => setUnlockSkills(!unlockSkills)}
+            title={t('common.unlock_skills_hint')}
+            style={{
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              color: unlockSkills ? 'var(--accent)' : 'var(--muted)',
+              padding: 0, display: 'flex', alignItems: 'center', marginLeft: '2px'
+            }}
+          >
+            {unlockSkills ? <Unlock size={12} /> : <Lock size={12} />}
+          </button>
         </div>
         
         {SKILLS_LIST.map((skill, sIdx) => {
@@ -371,7 +434,12 @@ export const SheetPage1 = ({ showTips }: { showTips?: boolean }) => {
               </div>
               
               <div style={{ width: isMobile ? '60px' : '110px', flexShrink: 0 }}>
-                <DotRating total={5} size={12} value={character.skills[skill.id]?.dots || 0} onChange={(v) => updateSkill(skill.id, v)} />
+                <DotRating
+                  total={Math.max(skillCap, character.skills[skill.id]?.dots || 0)}
+                  size={12}
+                  value={character.skills[skill.id]?.dots || 0}
+                  onChange={(v) => updateSkill(skill.id, v)}
+                />
               </div>
               
               <div style={{ display: 'flex', flex: 1, minWidth: 0, gap: '6px' }}>

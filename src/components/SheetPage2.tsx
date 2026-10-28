@@ -30,7 +30,7 @@ const sheetStyle: React.CSSProperties = {
 
 const MAX_DISCIPLINES = 16;
 
-export const SheetPage2 = ({ showTips }: { showTips?: boolean }) => {
+export const SheetPage2 = () => {
   const { t } = useTranslation();
   const character = useCharacterStore(s => s.getActive());
   const { updateField, updateNested, addDiscipline, updateDiscipline, updateDisciplinePower, removeDiscipline, updateLifePath, applyLifePath } = useCharacterStore();
@@ -44,7 +44,7 @@ export const SheetPage2 = ({ showTips }: { showTips?: boolean }) => {
   const slots = Math.max(1, character.disciplines.length);
 
   return (
-    <div id="character-sheet-2" className="sheet-page" style={{ ...sheetStyle, width: 'min(210mm, 100%)' }}>
+    <div id="character-sheet-2" className="sheet-page" style={{ ...sheetStyle, width: isMobile ? '100%' : '210mm' }}>
       {/* HEADER */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', width: '100%' }}>
         <AnkhIcon />

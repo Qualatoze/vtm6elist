@@ -264,10 +264,21 @@
     "delete": "Delete",
     "tips_toggle": "Toggle tips",
     "pdf_classic_hint": "Export PDF in light (classic) theme",
+    "pdf_classic_mode": "Classic Theme",
+    "pdf_remove_bg": "Remove Background (Save Ink)",
+    "pdf_remove_bg_hint": "Removes colored backgrounds from all themes during export to save printer ink.",
+    "pdf_do_export": "Export PDF",
     "history_changes": "Change history",
     "tooltip_label": "Hint",
     "custom_nostalgia": "Custom nostalgia",
-    "custom_clan": "Custom clan"
+    "custom_clan": "Custom clan",
+    "unlock_attributes_hint": "Unlock Attribute limits (by generation)",
+    "unlock_skills_hint": "Unlock Skill limits (neonate)",
+    "mobile_mode": "Mobile view",
+    "new_night": "New night",
+    "new_night_confirm": "Mark 1 cell on Beast and Nature counters?",
+    "end_session": "End session (reset Blood Surge)",
+    "end_session_confirm": "Reset Blood Surge?"
   },
   "attributes_groups": {
     "physical": "PHYSICAL",
