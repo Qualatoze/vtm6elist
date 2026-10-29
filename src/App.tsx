@@ -339,27 +339,6 @@ function App() {
               <NavTab to="/sheet" end label={t('nav.sheet')} />
               <NavTab to="/master" label={t('nav.master')} />
               <NavTab to="/account" label={t('nav.account')} />
-              <button
-                onClick={async () => {
-                  const code = prompt(t('master.code_prompt'));
-                  if (code === null) return;
-                  try {
-                    const valid = await api.verifyCode(code);
-                    if (valid) {
-                      setHasMasterCode(true);
-                      safeStorage.set('vtm6e-master-code', '1');
-                    } else {
-                      alert(t('master.code_wrong'));
-                    }
-                  } catch {
-                    alert(t('master.code_wrong'));
-                  }
-                }}
-                style={{ fontSize: '11px', color: 'var(--muted)', cursor: 'pointer', background: 'none', border: '1px solid var(--border)', padding: '2px 6px', borderRadius: '3px' }}
-                title={t('master.code_btn')}
-              >
-                {t('master.code_btn')}
-              </button>
             </div>
           )}
         
@@ -596,8 +575,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/sheet" replace />} />
           <Route path="/sheet" element={<SheetPage showTips={showTips} handleExportPdf={handleExportPdf} />} />
-          <Route path="/master" element={(isAuthed || hasMasterCode) ? <MasterRoute /> : <AuthScreen onAuth={() => setIsAuthed(true)} />} />
-          <Route path="/account" element={isAuthed ? <AccountRoute /> : <AuthScreen onAuth={() => setIsAuthed(true)} />} />
+          <Route path="/master" element={<MasterRoute />} />
+          <Route path="/account" element={<AccountRoute />} />
           <Route path="*" element={<Navigate to="/sheet" replace />} />
         </Routes>
       </main>
