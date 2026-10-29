@@ -7,8 +7,14 @@ import { debouncedStorage } from './utils/debouncedStorage';
 import { useUIStore } from './uiStore';
 import { getAttributeCap, getSkillCap } from './utils/limits';
 import { normalizeHistory } from './utils/migrate';
+import { deleteCharacter, endDelete } from './lib/sync';
 
-const generateId = () => crypto.randomUUID();
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Math.random().toString(36).substring(2, 10) + '-' + Date.now().toString(36);
+};
 
 const initialSkills: Record<string, { dots: number; specifications: [string, string, string] }> =
   SKILLS_LIST.reduce((acc, skill) => ({ ...acc, [skill.id]: { dots: 0, specifications: ['', '', ''] } }), {});
@@ -82,7 +88,7 @@ interface CharacterStore {
   resetActiveCharacter: () => void;
   switchCharacter: (id: string) => void;
   newCharacter: () => void;
-  removeCharacter: (id: string) => void;
+  removeCharacter: (id: string) => Promise<void>;
   addPowerPage: () => void;
   removePowerPage: (pageId: string) => void;
   updatePowerPageSettings: (pageId: string, settings: Partial<Pick<PowerPage, 'layout' | 'fontSize'>>) => void;
@@ -297,7 +303,7 @@ const syncClanAndSireDisciplines = (
     const exists = newChar.disciplines.some(d => normalizeId(d.name) === discId);
     if (!exists && newChar.disciplines.length < 16) {
       newChar.disciplines.push({
-        id: crypto.randomUUID(),
+        id: generateId(),
         name: discId,
         dots: 0,
         powersList: ['', '', '', '', '']
@@ -319,7 +325,7 @@ const syncClanAndSireDisciplines = (
       if (emptyIdx === -1 && cards.length < 10) emptyIdx = cards.length;
       if (emptyIdx !== -1) {
         cards[emptyIdx] = {
-          id: crypto.randomUUID(),
+          id: generateId(),
           disciplineId: discId,
           powerId: '', name: '', rank: 1,
           type: '', activation: '', trait: '', cost: '', difficulty: '', range: '', duration: '', description: '', upgrade: ''
@@ -701,14 +707,22 @@ export const useCharacterStore = create<CharacterStore>()(
         set(state => ({ characters: [...state.characters, c], activeId: c.id }));
       },
 
-      removeCharacter: (id) => set(state => {
-        const remaining = state.characters.filter(c => c.id !== id);
-        if (remaining.length === 0) {
-          const c = createEmptyCharacter();
-          return { characters: [c], activeId: c.id };
+      removeCharacter: async (id) => {
+        try {
+          await deleteCharacter(id);
+        } catch (e) {
+          // синк-ошибка не блокирует локальное удаление
         }
-        return { characters: remaining, activeId: state.activeId === id ? remaining[0].id : state.activeId };
-      }),
+        set(state => {
+          const remaining = state.characters.filter(c => c.id !== id);
+          if (remaining.length === 0) {
+            const c = createEmptyCharacter();
+            return { characters: [c], activeId: c.id };
+          }
+          return { characters: remaining, activeId: state.activeId === id ? remaining[0].id : state.activeId };
+        });
+        endDelete(id);
+      },
 
       addPowerPage: () => set(state => updateActive(state, c => {
         if (c.powerPages.length >= 5) return c;
@@ -772,7 +786,7 @@ export const useCharacterStore = create<CharacterStore>()(
         const cleaned = changes.filter(c => typeof c === 'string' && c.trim());
         if (cleaned.length === 0) return state;
         const item: HistoryItem = {
-          id: crypto.randomUUID(),
+          id: generateId(),
           timestamp: Date.now(),
           changes: cleaned,
         };

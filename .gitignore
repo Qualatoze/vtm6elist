@@ -8,6 +8,7 @@ build/
 # Переменные окружения
 .env
 .env.local
+.env.production
 
 # Логи
 npm-debug.log*
@@ -27,3 +28,7 @@ System.IO.FileStream
 allcode
 build_allcode.ps1
 fix28102026delmeafter.txt
+docs/README-DEPLOY.md
+plans/vps-deploy-plan.md
+docs/SUPABASE.md
+.env.example

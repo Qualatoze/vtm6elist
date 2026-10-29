@@ -387,3 +387,36 @@ export interface HistoryItem {
   timestamp: number;
   changes: string[];
 }
+
+// ============================================================
+// ЛИСТ МАСТЕРА — типы
+// ============================================================
+
+export interface SceneTrait {
+  id: string;
+  name: string;
+  description: string;
+  effect: string;
+}
+
+export interface MasterSessionNote {
+  id: string;
+  date: string;
+  title?: string;
+  lastUpdated: string;
+  content: string;
+}
+
+export interface Campaign {
+  id: string;
+  name: string;
+  drama: { current: number; max: number };
+  sceneTraits: SceneTrait[];
+  sessionNotes: MasterSessionNote[];
+}
+
+export interface MasterSheet {
+  campaigns: Campaign[];
+  activeCampaignId: string | null;
+  npcText: string;
+}

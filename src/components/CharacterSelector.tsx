@@ -56,7 +56,7 @@ export const CharacterSelector = () => {
                   )}
                 </button>
                 {characters.length > 1 && (
-                  <button onClick={(e) => { e.stopPropagation(); if (confirm(t('placeholders.delete_character'))) removeCharacter(c.id); }} className="ml-1" style={{ color: '#e74c3c', background: 'none', border: 'none', cursor: 'pointer' }}>
+                  <button onClick={(e) => { e.stopPropagation(); if (confirm(t('placeholders.delete_character'))) removeCharacter(c.id).catch(() => {}); }} className="ml-1" style={{ color: '#e74c3c', background: 'none', border: 'none', cursor: 'pointer' }}>
                     <Trash2 size={12} />
                   </button>
                 )}

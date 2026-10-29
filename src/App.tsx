@@ -1,10 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useCharacterStore } from './store';
-import { SheetPage1 } from './components/SheetPage1';
-import { SheetPage2 } from './components/SheetPage2';
-import { SheetPage3 } from './components/SheetPage3';
-import { SheetPage4 } from './components/SheetPage4';
-import { SheetPageInventory } from './components/SheetPageInventory';
 import { CharacterSelector } from './components/CharacterSelector';
 import i18n, { t } from './i18n';
 import { VAMPIRE_TYPES, CREATION_RULES } from './types';
@@ -12,9 +7,39 @@ import { exportJSON, importJSONFile, exportAllPDFs } from './utils/exportImport'
 import { safeStorage } from './utils/storage';
 import { THEMES, DEFAULT_THEME_ID } from './themes';
 import { useUIStore } from './uiStore';
+import { api } from './utils/api';
+import { AuthScreen } from './components/AuthScreen';
 import { Download, Upload, FileJson, RotateCcw, Menu, X, Send, BookOpen, Globe, History as HistoryIcon, HelpCircle, Smartphone, Moon, RefreshCw } from 'lucide-react';
+import { NavLink, Navigate, Routes, Route } from 'react-router-dom';
+import { SheetPage } from './pages/SheetPage';
+import { MasterRoute } from './pages/MasterRoute';
+import { AccountRoute } from './pages/AccountRoute';
+
+const NavTab = ({ to, label, end }: { to: string; label: string; end?: boolean }) => (
+  <NavLink
+    to={to}
+    end={end}
+    className="icon-btn"
+    style={({ isActive }) => ({
+      padding: '4px 10px',
+      borderRadius: '4px',
+      border: `1px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
+      background: isActive ? 'var(--accent)' : 'var(--panel)',
+      color: isActive ? 'var(--bg)' : 'var(--text)',
+      fontSize: '12px',
+      fontWeight: 'bold',
+      letterSpacing: '0.05em',
+      cursor: 'pointer',
+      transition: 'all 0.15s ease',
+    })}
+  >
+    {label}
+  </NavLink>
+);
 
 function App() {
+  const [isAuthed, setIsAuthed] = useState(!!api.getToken());
+  const [hasMasterCode, setHasMasterCode] = useState(!!safeStorage.get('vtm6e-master-code'));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [themeId, setThemeId] = useState<string>(() => safeStorage.get('vtm6e-theme') || DEFAULT_THEME_ID);
   const [lang, setLang] = useState<string>(() => safeStorage.get('vtm6e-lang') || 'ru');
@@ -70,6 +95,26 @@ function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const character = getActive();
   const prevCharRef = useRef(character);
+
+  // Загрузка персонажей с сервера при авторизации
+  useEffect(() => {
+    if (!isAuthed) return;
+    api.fetchCharacters().then(chars => {
+      if (chars && chars.length > 0) {
+        useCharacterStore.getState().loadCharacters(chars);
+      }
+    }).catch(console.error);
+  }, [isAuthed]);
+
+  // Автосохранение на сервер (debounce 3 сек)
+  useEffect(() => {
+    if (!isAuthed) return;
+    const timer = setTimeout(() => {
+      const chars = useCharacterStore.getState().characters;
+      api.saveCharacters(chars).catch(console.error);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [isAuthed, character]);
 
   // Сброс истории при смене персонажа
   useEffect(() => {
@@ -151,7 +196,7 @@ function App() {
     safeStorage.set('vtm6e-theme', themeId);
   }, [themeId]);
 
-  const handleExportPdf = async () => {
+  const handleExportPdf = useCallback(async () => {
     if (isExportingRef.current) return;
     setIsExporting(true);
     setPdfProgress({ current: 0, total: 0 });
@@ -167,21 +212,6 @@ function App() {
       setIsExporting(false);
       setPdfProgress({ current: 0, total: 0 });
     }
-  };
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        exportJSON(useCharacterStore.getState().getActive());
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
-        e.preventDefault();
-        if (!isExportingRef.current) handleExportPdf();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   useEffect(() => {
@@ -211,6 +241,7 @@ function App() {
     );
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
@@ -302,7 +333,36 @@ function App() {
           <div style={{ height: '20px', width: '1px', background: 'var(--border)' }} />
 
           <CharacterSelector />
-
+        
+          {!mobileMode && (
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <NavTab to="/sheet" end label={t('nav.sheet')} />
+              <NavTab to="/master" label={t('nav.master')} />
+              <NavTab to="/account" label={t('nav.account')} />
+              <button
+                onClick={async () => {
+                  const code = prompt(t('master.code_prompt'));
+                  if (code === null) return;
+                  try {
+                    const valid = await api.verifyCode(code);
+                    if (valid) {
+                      setHasMasterCode(true);
+                      safeStorage.set('vtm6e-master-code', '1');
+                    } else {
+                      alert(t('master.code_wrong'));
+                    }
+                  } catch {
+                    alert(t('master.code_wrong'));
+                  }
+                }}
+                style={{ fontSize: '11px', color: 'var(--muted)', cursor: 'pointer', background: 'none', border: '1px solid var(--border)', padding: '2px 6px', borderRadius: '3px' }}
+                title={t('master.code_btn')}
+              >
+                {t('master.code_btn')}
+              </button>
+            </div>
+          )}
+        
           <div style={{ height: '20px', width: '1px', background: 'var(--border)' }} />
 
           {/* Group 3: Tools */}
@@ -480,6 +540,9 @@ function App() {
         {mobileMenuOpen && (
           <div style={{ background: 'var(--panel)', borderTop: '1px solid var(--border)', padding: '8px 12px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <NavLink to="/sheet" end className="flex items-center gap-2 p-2 rounded" style={({ isActive }) => ({ background: isActive ? 'var(--accent)' : 'transparent', color: isActive ? 'var(--bg)' : 'var(--text)', border: `1px solid ${isActive ? 'var(--accent)' : 'var(--border)'}` })}>{t('nav.sheet')}</NavLink>
+              <NavLink to="/master" className="flex items-center gap-2 p-2 rounded" style={({ isActive }) => ({ background: isActive ? 'var(--accent)' : 'transparent', color: isActive ? 'var(--bg)' : 'var(--text)', border: `1px solid ${isActive ? 'var(--accent)' : 'var(--border)'}` })}>{t('nav.master')}</NavLink>
+              <NavLink to="/account" className="flex items-center gap-2 p-2 rounded" style={({ isActive }) => ({ background: isActive ? 'var(--accent)' : 'transparent', color: isActive ? 'var(--bg)' : 'var(--text)', border: `1px solid ${isActive ? 'var(--accent)' : 'var(--border)'}` })}>{t('nav.account')}</NavLink>
               <button onClick={() => { setShowSummary(true); setMobileMenuOpen(false); }} className="flex items-center gap-2 p-2 rounded" style={{ background: 'transparent', color: 'var(--text)', border: `1px solid var(--border)` }}><BookOpen size={14} /> {t('common.summary_rules')}</button>
               <button onClick={() => { exportJSON(character); setMobileMenuOpen(false); }} className="flex items-center gap-2 p-2 rounded" style={{ background: 'transparent', color: 'var(--text)', border: `1px solid var(--border)` }}><FileJson size={14} /> {t('common.export_json')}</button>
               <button onClick={() => { fileInputRef.current?.click(); setMobileMenuOpen(false); }} className="flex items-center gap-2 p-2 rounded" style={{ background: 'transparent', color: 'var(--text)', border: `1px solid var(--border)` }}><Upload size={14} /> {t('common.import_json')}</button>
@@ -530,36 +593,13 @@ function App() {
 
       {/* MAIN CONTENT */}
       <main id="main-content" className="flex-1 p-2 md:p-6 pb-20 md:pb-6">
-        <div style={{ width: '100%', maxWidth: '210mm', margin: '0 auto', overflowX: 'auto' }}>
-          <SheetPage1 showTips={showTips} />
-          <SheetPage2 />
-          <SheetPage3 />
-          <SheetPageInventory />
-
-          {character.powerPages?.map((page, idx) => (
-            <SheetPage4 key={page.id} page={page} pageIndex={idx} />
-          ))}
-
-          <div className="no-print" style={{ marginTop: '20px', marginBottom: '40px', textAlign: 'center' }}>
-            <button
-              onClick={addPowerPage}
-              disabled={character.powerPages?.length >= 5}
-              style={{
-                padding: '10px 20px',
-                background: character.powerPages?.length >= 5 ? 'var(--border)' : 'var(--accent)',
-                color: character.powerPages?.length >= 5 ? 'var(--muted)' : 'var(--bg)',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: character.powerPages?.length >= 5 ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
-                fontWeight: 'bold',
-                fontFamily: "'Cinzel', serif"
-              }}
-            >
-              {t('ui.add_page')}
-            </button>
-          </div>
-        </div>
+        <Routes>
+          <Route path="/" element={<Navigate to="/sheet" replace />} />
+          <Route path="/sheet" element={<SheetPage showTips={showTips} handleExportPdf={handleExportPdf} />} />
+          <Route path="/master" element={(isAuthed || hasMasterCode) ? <MasterRoute /> : <AuthScreen onAuth={() => setIsAuthed(true)} />} />
+          <Route path="/account" element={isAuthed ? <AccountRoute /> : <AuthScreen onAuth={() => setIsAuthed(true)} />} />
+          <Route path="*" element={<Navigate to="/sheet" replace />} />
+        </Routes>
       </main>
       
       <div style={{ textAlign: 'center', padding: '8px 0 4px', fontSize: '11px', color: 'var(--muted)', fontFamily: "'Cinzel', serif", letterSpacing: '0.15em' }}>
